@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>第一卷：统计学习与回归 (Chapter 2: Statistical Learning) — DS4023 交互式教材</title>
+  <link rel="stylesheet" href="katex.min.css" />
+  <script defer src="katex.min.js"></script>
+  <script defer src="auto-render.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-subtle: #f1f5f9;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --primary: #2563eb; --primary-light: #eff6ff; --primary-dark: #1d4ed8;
+      --accent: #7c3aed; --accent-light: #f5f3ff; --success: #059669; --success-light: #ecfdf5;
+      --warning: #d97706; --warning-light: #fffbeb; --danger: #dc2626; --danger-light: #fef2f2;
+      --code-bg: #1e293b; --code-text: #f8fafc;
+      --shadow: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.05);
+      --shadow-lg: 0 10px 25px -5px rgba(15,23,42,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --bg-card: #1e293b; --bg-subtle: #0f172a;
+      --text: #f1f5f9; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+      --border: #334155; --primary: #60a5fa; --primary-light: rgba(59,130,246,0.15); --primary-dark: #93c5fd;
+      --accent: #a78bfa; --accent-light: rgba(124,58,237,0.15); --success: #34d399; --success-light: rgba(5,150,105,0.15);
+      --warning: #fbbf24; --warning-light: rgba(217,119,6,0.15); --danger: #f87171; --danger-light: rgba(220,38,38,0.15);
+      --code-bg: #020617; --code-text: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.4); --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.5);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.78; transition: background 0.25s, color 0.25s;
+    }
+    #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: rgba(148,163,184,0.2); z-index: 2000; }
+    #progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899); }
+    .top-nav {
+      position: fixed; top: 4px; left: 0; right: 0; height: 60px; background: var(--bg-card);
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; z-index: 1500; box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.02rem; color: var(--text); text-decoration: none; }
+    .brand-badge { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; }
+    .nav-links { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .nav-link { text-decoration: none; color: var(--text-secondary); font-size: 0.86rem; font-weight: 500; padding: 0.38rem 0.75rem; border-radius: 8px; }
+    .nav-link:hover, .nav-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-controls { display: flex; align-items: center; gap: 0.5rem; }
+    .btn-icon { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--text); padding: 0.38rem 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+    .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+    .layout { display: flex; margin-top: 64px; min-height: calc(100vh - 64px); }
+    .sidebar {
+      width: 295px; background: var(--bg-card); border-right: 1px solid var(--border);
+      position: fixed; top: 64px; bottom: 0; left: 0; overflow-y: auto; padding: 1.3rem 0.9rem; z-index: 1000;
+    }
+    .sidebar-title { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700; margin: 1rem 0 0.5rem; padding-left: 0.5rem; }
+    .sidebar-title:first-child { margin-top: 0; }
+    .toc-list { list-style: none; }
+    .toc-item { margin-bottom: 0.2rem; }
+    .toc-link { display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-secondary); font-size: 0.84rem; padding: 0.4rem 0.55rem; border-radius: 6px; }
+    .toc-link:hover, .toc-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .slide-tag { font-size: 0.66rem; background: var(--bg-subtle); color: var(--text-muted); padding: 0.08rem 0.38rem; border-radius: 4px; border: 1px solid var(--border); font-family: monospace; white-space: nowrap; }
+    .main-content { margin-left: 295px; flex: 1; max-width: 1080px; padding: 2rem 2.6rem 5rem; }
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f766e 100%); color: #ffffff !important; padding: 2.4rem; border-radius: 16px; margin-bottom: 2.2rem; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.15); }
+    .hero-eyebrow { display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff !important; border: 1px solid rgba(255,255,255,0.38); padding: 0.28rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.85rem; }
+    .hero h1 { font-size: 2.05rem; line-height: 1.25; margin-bottom: 0.75rem; font-weight: 800; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .hero p { color: #f8fafc !important; opacity: 1; font-size: 1.02rem; max-width: 880px; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+    .hero-pill { background: rgba(15,23,42,0.45); border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.75rem; border-radius: 8px; font-size: 0.78rem; color: #e2e8f0; }
+    .chapter-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem 2.2rem; margin-bottom: 2.2rem; box-shadow: var(--shadow); }
+    .section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.9rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+    .section-title { font-size: 1.45rem; font-weight: 800; color: var(--text); }
+    .slide-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; font-family: monospace; }
+    .supplement-badge { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 6px; }
+    h3 { font-size: 1.2rem; font-weight: 700; margin: 1.55rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 1.03rem; font-weight: 700; margin: 1.15rem 0 0.45rem; color: var(--text); }
+    p { margin-bottom: 0.9rem; color: var(--text-secondary); }
+    ul, ol { margin: 0.5rem 0 1.1rem 1.4rem; color: var(--text-secondary); }
+    li { margin-bottom: 0.38rem; }
+    strong { color: var(--text); font-weight: 600; }
+    .step-box { border-left: 4px solid var(--primary); background: var(--bg-subtle); border-radius: 0 10px 10px 0; padding: 1.1rem 1.35rem; margin: 1.15rem 0; }
+    .step-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; padding: 0.16rem 0.55rem; border-radius: 5px; }
+    .step-why { border-left-color: #2563eb; background: var(--primary-light); } .step-why .step-label { background: #2563eb; color: #fff; }
+    .step-intuition { border-left-color: #7c3aed; background: var(--accent-light); } .step-intuition .step-label { background: #7c3aed; color: #fff; }
+    .step-how { border-left-color: #0891b2; } .step-how .step-label { background: #0891b2; color: #fff; }
+    .step-math { border-left-color: #4f46e5; background: var(--bg-card); border: 1px solid var(--border); border-left: 4px solid #4f46e5; } .step-math .step-label { background: #4f46e5; color: #fff; }
+    .step-example { border-left-color: #059669; background: var(--success-light); } .step-example .step-label { background: #059669; color: #fff; }
+    .step-mistake { border-left-color: #dc2626; background: var(--danger-light); } .step-mistake .step-label { background: #dc2626; color: #fff; }
+    .step-supplement { border-left-color: #d97706; background: var(--warning-light); } .step-supplement .step-label { background: #d97706; color: #fff; }
+    .formula-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem 1.35rem; margin: 1.05rem 0; box-shadow: var(--shadow); overflow-x: auto; }
+    .var-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.45rem 1rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.86rem; }
+    .var-item { display: flex; align-items: baseline; gap: 0.4rem; }
+    .var-sym { font-weight: 700; color: var(--primary); min-width: 42px; }
+    details.collapsible { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); margin: 0.95rem 0; overflow: hidden; }
+    details.collapsible summary { padding: 0.82rem 1.1rem; font-weight: 700; cursor: pointer; background: var(--bg-subtle); display: flex; justify-content: space-between; list-style: none; }
+    details.collapsible summary::-webkit-details-marker { display: none; }
+    details.collapsible summary::after { content: "▼ 展开详细推导 / 解析"; font-size: 0.75rem; color: var(--primary); }
+    details.collapsible[open] summary::after { content: "▲ 收起"; }
+    details.collapsible .collapsible-body { padding: 1.1rem 1.35rem; border-top: 1px solid var(--border); }
+    .interactive-lab { border: 2px solid var(--primary); border-radius: 12px; background: var(--bg-card); padding: 1.35rem; margin: 1.4rem 0; box-shadow: var(--shadow); }
+    .lab-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.85rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--border); }
+    .lab-title { font-weight: 800; color: var(--primary); font-size: 1.02rem; }
+    .lab-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; background: var(--bg-subtle); padding: 0.85rem 1rem; border-radius: 10px; margin-bottom: 0.95rem; }
+    .control-group { display: flex; flex-direction: column; gap: 0.25rem; min-width: 155px; flex: 1; }
+    .control-group label { font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; }
+    .control-group input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+    .lab-btn { background: var(--primary); color: #fff; border: none; padding: 0.42rem 0.9rem; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; }
+    .lab-canvas-wrap { width: 100%; display: flex; justify-content: center; background: var(--bg-subtle); border-radius: 10px; padding: 0.7rem; overflow-x: auto; }
+    canvas.lab-canvas { background: #fff; border-radius: 8px; border: 1px solid var(--border); max-width: 100%; }
+    .lab-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 0.65rem; margin-top: 0.85rem; }
+    .stat-card { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.75rem; text-align: center; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); }
+    .stat-val { font-size: 1rem; font-weight: 800; color: var(--primary); font-family: monospace; }
+    .table-wrap { overflow-x: auto; margin: 1.05rem 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: var(--bg-subtle); font-weight: 700; color: var(--text); }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1rem 1.2rem; border-radius: 10px; overflow-x: auto; font-family: monospace; font-size: 0.84rem; line-height: 1.55; margin: 0.95rem 0; }
+    code { font-family: monospace; background: var(--bg-subtle); padding: 0.12rem 0.35rem; border-radius: 4px; font-size: 0.85em; color: var(--accent); }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.05rem; margin: 1.05rem 0; }
+    .info-card { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; }
+    .chapter-footer-nav { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.4rem; padding-top: 1.3rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .nav-card { flex: 1; min-width: 240px; background: var(--bg-card); border: 1px solid var(--border); padding: 1rem 1.3rem; border-radius: 12px; text-decoration: none; color: var(--text); box-shadow: var(--shadow); }
+    .nav-card-dir { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+    .nav-card-title { font-size: 0.98rem; font-weight: 700; color: var(--primary); margin-top: 0.2rem; }
+    @media (max-width: 960px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.2rem; } }
+  </style>
+  <link rel="stylesheet" href="reading.css">
+</head>
+<body>
+  <div id="progress-container"><div id="progress-bar"></div></div>
+  <header class="top-nav">
+    <a href="index.html" class="brand">
+      <span class="brand-badge">DS4023</span>
+      <span>第一卷：统计学习与回归 (Chapter 2)</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link">0. 总览与速查表</a>
+      <a href="chapter2-statistical-learning.html" class="nav-link active">Ch2. 统计学习与回归</a>
+      <a href="chapter3-supervised-learning.html" class="nav-link">Ch3. 监督学习 (LR/SVM/集成)</a>
+      <a href="chapter4-neural-networks.html" class="nav-link">Ch4. 神经网络与反向传播</a>
+    </nav>
+    <div class="nav-controls">
+      <button id="expand-all-btn" class="btn-icon">📖 展开全部推导与解析</button>
+      <button id="theme-toggle" class="btn-icon">🌙 深色模式</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">第一卷目录 (对应 Ch2 P.1–118)</div>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-2-0" class="toc-link">2.0 统计学习四要素与梯度下降 <span class="slide-tag">P.1–18</span></a></li>
+        <li class="toc-item"><a href="#sec-2-1" class="toc-link">2.1 线性回归、岭回归与曲线拟合 <span class="slide-tag">P.19–34</span></a></li>
+        <li class="toc-item"><a href="#sec-2-2" class="toc-link">2.2 概率分布、逆变换采样与大数定律 <span class="slide-tag">P.35–49</span></a></li>
+        <li class="toc-item"><a href="#sec-2-5" class="toc-link">2.5 线性回归的概率视角 (MLE/MAP) <span class="slide-tag">P.97–106</span></a></li>
+        <li class="toc-item"><a href="#sec-2-3" class="toc-link">2.3 朴素贝叶斯与文本分类实战 <span class="slide-tag">P.50–70</span></a></li>
+        <li class="toc-item"><a href="#sec-2-4" class="toc-link">2.4 分类评估、ROC/AUC与Lift分析 <span class="slide-tag">P.71–96</span></a></li>
+        <li class="toc-item"><a href="#sec-2-6" class="toc-link">2.6 偏差-方差分解、定理与PAC理论 <span class="slide-tag">P.107–118</span></a></li>
+        <li class="toc-item"><a href="#sec-2-practice" class="toc-link">2.7 本章分层综合练习与解析 <span class="slide-tag">Exam Prep</span></a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <section class="hero">
+        <span class="hero-eyebrow">Volume I · Original Lecture: 2-Statistical Learning.pptx (Slides P.1 – P.118)</span>
+        <h1>第一卷：统计学习理论、回归、概率建模与分类评估</h1>
+        <p>欢迎来到机器学习的第一站！在这一卷中，我们将揭开机器学习最底层的数学面纱：为什么说“学习”的本质是在假设空间中寻找一个映射函数？为什么最小二乘法等价于高斯噪声下的极大似然估计，而加上 $\ell_2$ 正则化就变成了贝叶斯最大后验估计？我们又该如何科学地评估一个分类器并权衡偏差与方差？</p>
+        <div class="hero-meta">
+          <span class="hero-pill">📌 原始课件页码：2-Statistical Learning.pptx P.1 – P.118 全覆盖</span>
+          <span class="hero-pill">🎛️ 内置 3 个交互式实验室：梯度下降模拟器 · 多项式正则化拟合器 · ROC/P-R动态阈值台</span>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.0 ==================== -->
+      <section id="sec-2-0" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.0 统计学习总论与机器学习四要素 (Four Elements of ML)</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.1 – P.18</span>
+        </div>
+
+        <div class="step-box step-why">
+          <div class="step-label">Step 1 · Why — 为什么我们需要机器学习？</div>
+          <p>在传统软件工程中，程序员手工编写确定性的 `if-else` 规则处理输入。但面对以下四个典型现实问题（<strong>Slides P.3</strong>）：</p>
+          <ul>
+            <li><strong>图像识别（Image Recognition）</strong>：输入一张手写数字图片 $\mathbf{x}$（像素矩阵），输出数字类别 $y = \text{“9”}$；</li>
+            <li><strong>语音识别（Speech Recognition）</strong>：输入一段音频声波信号 $\mathbf{x}$，输出文字 $y = \text{“你好”}$；</li>
+            <li><strong>围棋博弈（Game of Go）</strong>：输入当前 $19 \times 19$ 棋盘局势 $\mathbf{x}$，输出最优落子坐标 $y = \text{“6-5”}$；</li>
+            <li><strong>机器翻译（Machine Translation）</strong>：输入英文句子 $\mathbf{x} = \text{“Hello!”}$，输出中文翻译 $y = \text{“你好！”}$。</li>
+          </ul>
+          <p>像素或声波的组合多达天文数字，没有任何人类专家能手工写出完备的映射规则。因此，我们必须让计算机<strong>从大量历史数据中自动学习出输入 $\mathbf{x}$ 到输出 $y$ 的映射函数（Mapping Function / Rule）$f^*(\mathbf{x})$</strong>（<strong>Slide P.4</strong>）。</p>
+        </div>
+
+        <div class="step-box step-intuition">
+          <div class="step-label">Step 2 · Intuition — 建立直觉：机器学习的“四要素”流水线</div>
+          <p>任何机器学习系统，无论表面上看起来多么复杂（从最简单的线性回归到千亿参数的大模型），都可以拆解为<strong>四个核心要素（Four Elements in Machine Learning，Slide P.5）</strong>：</p>
+          <ol>
+            <li><strong>数据（Data）</strong>：我们的“教材”。假设真实世界中数据服从某个未知的<strong>独立同分布（Independent and Identically Distributed, I.I.D.）</strong>概率分布 $p_r(\mathbf{x}, y)$，我们从中采样得到包含 $N$ 个样本的训练集 $\mathcal{D} = \{(\mathbf{x}^{(n)}, y^{(n)})\}_{n=1}^N$（<strong>Slide P.4</strong>）。</li>
+            <li><strong>模型（Model / Hypothesis Space $\mathcal{F}$）</strong>：我们的“候选答案库”。即一族由参数 $\theta$ 控制的函数集合 $\mathcal{F} = \{f(\mathbf{x}; \theta) \mid \theta \in \Theta\}$。
+              <ul>
+                <li><strong>线性模型（Linear Model，Slide P.6）</strong>：$f(\mathbf{x}; \theta) = \mathbf{w}^T\mathbf{x} + b$；</li>
+                <li><strong>广义非线性基函数模型（Nonlinear Model，Slide P.6）</strong>：$f(\mathbf{x}; \theta) = \mathbf{w}^T\phi(\mathbf{x}) + b$，其中 $\phi(\mathbf{x})$ 是非线性特征变换（基函数）。<strong>课件核心洞察（Slide P.6）</strong>：如果 $\phi(\mathbf{x})$ 本身也是带参数且可学习的（Learnable nonlinear basis function），那么 $f(\mathbf{x}; \theta)$ 就等价于<strong>神经网络（Neural Network）</strong>！</li>
+              </ul>
+            </li>
+            <li><strong>学习准则（Learning Rule / Criterion）</strong>：我们的“评分标准”。用来衡量哪个参数 $\theta$ 对应的函数最好。</li>
+            <li><strong>优化算法（Optimization Algorithm $\mathcal{A}$）</strong>：我们的“寻宝罗盘”。在参数空间中高效搜索使评分最优的参数 $\theta^*$。</li>
+          </ol>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 3 &amp; 4 · How &amp; Mathematics — 从损失函数到经验风险最小化与梯度下降</div>
+          <h4>(1) 损失函数（Loss Function）与三种风险（Slides P.7 – P.9, P.16）</h4>
+          <p>为了量化单个样本 $(\mathbf{x}, y)$ 上模型预测值 $f(\mathbf{x};\theta)$ 与真实标签 $y$ 的差距，我们定义一个非负实值函数——<strong>损失函数 $\mathcal{L}(y, f(\mathbf{x};\theta))$</strong>。例如回归任务中最常用的<strong>平方损失函数（Quadratic Loss，Slide P.7）</strong>：</p>
+          $$\mathcal{L}(y, f(\mathbf{x};\theta)) = \frac{1}{2}\left(y - f(\mathbf{x};\theta)\right)^2$$
+          <p><em>思考：为什么前面要乘一个 $\frac{1}{2}$？</em> 因为对平方项求导时会产生一个系数 $2$，$\frac{1}{2} \times 2 = 1$ 刚好抵消，使梯度公式极其干净，且常数缩放完全不改变最优参数 $\theta^*$ 的位置！</p>
+
+          <div class="formula-card">
+            <strong>期望风险（Expected Risk）vs 经验风险（Empirical Risk）vs 泛化误差（Generalization Error）（Slides P.8, P.9, P.16）</strong>
+            $$\mathcal{R}(\theta) = \mathbb{E}_{(\mathbf{x},y)\sim p_r(\mathbf{x},y)}\left[\mathcal{L}(y, f(\mathbf{x};\theta))\right] = \int \mathcal{L}(y, f(\mathbf{x};\theta)) \, p_r(\mathbf{x},y)\, d\mathbf{x}dy$$
+            $$\mathcal{R}_{\mathcal{D}}^{emp}(\theta) = \frac{1}{N}\sum_{n=1}^N \mathcal{L}\left(y^{(n)}, f(\mathbf{x}^{(n)};\theta)\right)$$
+            $$\mathcal{G}_{\mathcal{D}}(f) = \mathcal{R}(f) - \mathcal{R}_{\mathcal{D}}^{emp}(f)$$
+            <div class="var-list">
+              <div class="var-item"><span class="var-sym">$p_r(\mathbf{x},y)$</span><span>真实世界未知的联合概率分布（Real data distribution）</span></div>
+              <div class="var-item"><span class="var-sym">$\mathcal{R}(\theta)$</span><span>期望风险：模型在所有可能未来数据上的真实平均损失（理想目标，但因 $p_r$ 未知而无法直接计算）</span></div>
+              <div class="var-item"><span class="var-sym">$\mathcal{R}_{\mathcal{D}}^{emp}(\theta)$</span><span>经验风险：模型在已知的 $N$ 个训练样本上的平均损失</span></div>
+              <div class="var-item"><span class="var-sym">$\mathcal{G}_{\mathcal{D}}(f)$</span><span>泛化误差（Generalization Gap）：期望风险与经验风险之差，衡量模型“死记硬背训练集”的程度</span></div>
+            </div>
+          </div>
+
+          <p>由于真实分布 $p_r(\mathbf{x},y)$ 未知，我们用经验风险近似期望风险，从而得到<strong>经验风险最小化准则（Empirical Risk Minimization, ERM，Slide P.9）</strong>：</p>
+          $$\theta^* = \arg\min_{\theta} \mathcal{R}_{\mathcal{D}}^{emp}(\theta)$$
+
+          <h4>(2) 凸优化 vs 非凸优化与梯度下降家族（Slides P.10 – P.14）</h4>
+          <p>通过 ERM，机器学习问题被转化为数学上的函数最小化问题 $\min_\theta \mathcal{R}_{\mathcal{D}}(\theta)$：</p>
+          <ul>
+            <li><strong>凸优化（Convex Optimization，Slide P.10 左图）</strong>：目标函数形如一个光滑的碗，任何局部极小值（Local Minimum）就是全局最小值（Global Minimum），如线性回归、逻辑回归、SVM。</li>
+            <li><strong>非凸优化（Non-convex Optimization，Slide P.10 右图）</strong>：目标函数存在多个山谷（局部极小值）和鞍点，如深层神经网络。</li>
+          </ul>
+          <p>如何使用<strong>梯度下降法（Gradient Descent, GD，Slide P.11）</strong>求解？微积分告诉我们，梯度 $\frac{\partial \mathcal{R}_{\mathcal{D}}(\theta)}{\partial \theta}$ 指向函数值增长最快的方向（上坡方向）；因此沿着<strong>负梯度方向（下坡方向）</strong>迈出一小步，函数值就会下降：</p>
+          $$\theta_{t+1} = \theta_t - \alpha \frac{\partial \mathcal{R}_{\mathcal{D}}(\theta)}{\partial \theta} = \theta_t - \alpha \frac{1}{N}\sum_{n=1}^N \frac{\partial \mathcal{L}(y^{(n)}, f(\mathbf{x}^{(n)};\theta))}{\partial \theta}$$
+          <p>其中步长 $\alpha > 0$ 称为<strong>学习率（Learning Rate，Slide P.11–12）</strong>，它是机器学习中最重要的<strong>超参数（Hyperparameter）</strong>：</p>
+          <ul>
+            <li>$\alpha$ <strong>过小（Too low / blue curve）</strong>：每次挪动极小，需要极多轮迭代（Epochs）才能到达谷底；</li>
+            <li>$\alpha$ <strong>适中（Just right / red curve）</strong>：平稳且迅速地收敛到最小值点；</li>
+            <li>$\alpha$ <strong>偏高（High / green curve）</strong>：前期下降快，但在谷底附近来回横跳，无法精细收敛到最低点；</li>
+            <li>$\alpha$ <strong>过高（Too high / yellow curve）</strong>：一步跨过山谷跳到对面更高的山坡上，导致损失函数剧烈发散（Divergence）爆炸！</li>
+          </ul>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>优化算法名称</th>
+                  <th>每次更新使用的样本数</th>
+                  <th>参数更新公式 (Slides P.11, P.13)</th>
+                  <th>优缺点与轨迹特征 (Slide P.13–14)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>批量梯度下降 (Batch GD)</strong></td>
+                  <td>全部 $N$ 个样本</td>
+                  <td>$\theta_{t+1} = \theta_t - \alpha \frac{1}{N}\sum_{n=1}^N \nabla_\theta \mathcal{L}(y^{(n)}, f(\mathbf{x}^{(n)};\theta))$</td>
+                  <td>方向最准，轨迹平滑垂直穿过等高线（P.11）；但当 $N$ 极大时每步计算极其缓慢，不支持在线学习。</td>
+                </tr>
+                <tr>
+                  <td><strong>随机梯度下降 (SGD，算法2.1)</strong></td>
+                  <td>随机抽取 $1$ 个样本 $(\mathbf{x}^{(n)}, y^{(n)})$</td>
+                  <td>$\theta_{t+1} = \theta_t - \alpha \nabla_\theta \mathcal{L}(y^{(n)}, f(\mathbf{x}^{(n)};\theta))$</td>
+                  <td>单步计算开销极小，支持在线学习；但单样本梯度带噪声，等高线轨迹呈<strong>剧烈抖动的锯齿状（Slide P.14）</strong>，且无法利用 GPU 矩阵并行。</td>
+                </tr>
+                <tr>
+                  <td><strong>小批量梯度下降 (Mini-Batch SGD)</strong></td>
+                  <td>小批量 $B$ 个样本（如 $B=32, 64$）</td>
+                  <td>$\theta_{t+1} = \theta_t - \alpha \frac{1}{B}\sum_{k=1}^B \nabla_\theta \mathcal{L}(y^{(n_k)}, f(\mathbf{x}^{(n_k)};\theta))$</td>
+                  <td>兼顾单步速度与梯度稳定性，完美契合 GPU 并行计算；Batch Size $B$ 是另一个核心超参数。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>(3) 为什么机器学习 $\neq$ 优化？欠拟合、过拟合与正则化几何直觉（Slides P.15 – P.18）</h4>
+          <p>如果一味追求将训练集上的经验风险 $\mathcal{R}_{\mathcal{D}}^{emp}(\theta)$ 降到 $0$，模型会把训练数据中的随机噪声也当成普遍规律死记硬背下来，导致在未知测试集上误差极大——这就是<strong>过拟合（Overfitting，Slide P.15 右图）</strong>；反之，若模型过于简单连训练集基本趋势都抓不住，则称为<strong>欠拟合（Underfitting，Slide P.15 左图）</strong>。</p>
+          <p><strong>如何降低泛化误差？（Slide P.17–18）</strong> 一方面靠<strong>优化</strong>最小化经验风险，另一方面靠<strong>正则化（Regularization）</strong>降低模型复杂度，常见手段包括：$\ell_1 / \ell_2$ 范数约束、数据增强（Data Augmentation）、权重衰减（Weight Decay）、SGD 隐式正则化以及<strong>早停法（Early Stopping，当验证集错误率不再下降反而回升时立即停止迭代，Slide P.18 右图）</strong>。</p>
+          <p><strong>Slide P.18 左图深度解析（为什么 $\ell_2$ 惩罚能让参数变小？）</strong>：在二维参数平面 $(w_1, w_2)$ 中，右上方的同心椭圆代表经验风险 $\mathcal{R}_{\mathcal{D}}^{emp}(\mathbf{w})$ 的等高线（中心点为无约束最小二乘解），圆心在原点的灰色圆盘代表正则化项 $\lambda\|\mathbf{w}\|_2^2$ 的等值区域。总目标 $\text{Cost} + \text{Penalty}$ 取极小值的点，必然发生在<strong>经验风险椭圆等高线与原点圆盘相切（Tangent）的切点处</strong>——这就把原本远离原点的参数强行“拉回”到了靠近原点的小数值区域！</p>
+        </div>
+
+        <!-- Interactive Lab 2.1: Gradient Descent & Learning Rate Simulator -->
+        <div class="interactive-lab">
+          <div class="lab-header">
+            <div class="lab-title">🎛️ 交互式实验室 2.1：梯度下降学习率 $\alpha$ 与 SGD 振荡轨迹模拟器 (对应 Slides P.11–14)</div>
+            <span class="slide-badge">Interactive Visualization</span>
+          </div>
+          <p style="font-size:0.88rem;">在下方调节学习率 $\alpha$ 和噪声强度（模拟 Batch GD 与 SGD 的区别），观察参数在二次函数 $f(x) = x^2$ 与二维椭圆等高线 $z = x^2 + 2y^2$（<strong>复刻 Slide P.11 右图</strong>）上的真实迭代轨迹：</p>
+          <div class="lab-controls">
+            <div class="control-group">
+              <label><span>学习率 $\alpha$ (Learning Rate)</span><span id="gd-lr-val">0.15</span></label>
+              <input type="range" id="gd-lr" min="0.02" max="1.02" step="0.02" value="0.15" />
+            </div>
+            <div class="control-group">
+              <label><span>梯度随机噪声 (0 = Batch GD, &gt;0 = SGD)</span><span id="gd-noise-val">0.00</span></label>
+              <input type="range" id="gd-noise" min="0" max="0.8" step="0.05" value="0" />
+            </div>
+            <button class="lab-btn" id="gd-reset-btn">🔄 重新生成随机轨迹</button>
+          </div>
+          <div class="lab-canvas-wrap">
+            <canvas id="gd-canvas" class="lab-canvas" width="760" height="300"></canvas>
+          </div>
+          <div class="lab-stats">
+            <div class="stat-card"><div class="stat-label">当前状态诊断</div><div class="stat-val" id="gd-status">理想收敛 (Just Right)</div></div>
+            <div class="stat-card"><div class="stat-label">起点 $(x_0, y_0)$</div><div class="stat-val">(-2.6, 2.6)</div></div>
+            <div class="stat-card"><div class="stat-label">15步后终点损失 $z$</div><div class="stat-val" id="gd-final-loss">0.004</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.1 ==================== -->
+      <section id="sec-2-1" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.1 线性回归、最小二乘闭式解、岭回归与多项式曲线拟合</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.19 – P.34</span>
+        </div>
+
+        <div class="step-box step-why">
+          <div class="step-label">Step 1 &amp; 2 · Why &amp; Intuition — 增广向量与设计矩阵的巧妙打包</div>
+          <p>给定训练集 $\mathcal{D} = \{(\mathbf{x}^{(n)}, y^{(n)})\}_{n=1}^N$，其中输入特征 $\mathbf{x}^{(n)} \in \mathbb{R}^D$，输出标签 $y^{(n)} \in \mathbb{R}$ 是连续变量（<strong>Slide P.20</strong>）。线性回归试图用超平面 $f(\mathbf{x}; \mathbf{w}, b) = \mathbf{w}^T\mathbf{x} + b$ 拟合数据。</p>
+          <p>为了在矩阵推导中不必处处把权重 $\mathbf{w}$ 和偏置 $b$ 分开求导，<strong>Slide P.21</strong> 引入了极其优雅的<strong>增广向量（Augmented Vectors）</strong>记号 $\oplus$：在每个 $D$ 维特征向量末尾拼上一个常数 $1$，在权重向量末尾拼上 $b$：</p>
+          $$\hat{\mathbf{x}} = \mathbf{x} \oplus 1 \triangleq \begin{bmatrix} \mathbf{x} \\ 1 \end{bmatrix} = \begin{bmatrix} x_1 \\ \vdots \\ x_D \\ 1 \end{bmatrix} \in \mathbb{R}^{D+1}, \qquad \hat{\mathbf{w}} = \mathbf{w} \oplus b \triangleq \begin{bmatrix} \mathbf{w} \\ b \end{bmatrix} = \begin{bmatrix} w_1 \\ \vdots \\ w_D \\ b \end{bmatrix} \in \mathbb{R}^{D+1}$$
+          <p>从此以后（在不引起歧义时直接简记为 $\mathbf{x}$ 和 $\mathbf{w}$），线性模型就化简成了纯粹的内积：$f(\mathbf{x}; \mathbf{w}) = \mathbf{w}^T\mathbf{x}$！</p>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — 最小二乘法（Least Squares）与岭回归（Ridge Regression）零跳步推导</div>
+          <p><strong>⚠️ 考试审题核心警告（Slide P.22 矩阵排列约定）</strong>：在本课程 Chapter 2 课件 P.22 中，数据矩阵 $\mathbf{X}$ 是<strong>按列排放每个样本</strong>的（即每一列是一个 $(D+1)$ 维增广样本 $\mathbf{x}^{(n)}$，共有 $N$ 列）：</p>
+          $$\mathbf{X} = \begin{bmatrix} x_1^{(1)} & x_1^{(2)} & \cdots & x_1^{(N)} \\ \vdots & \vdots & \ddots & \vdots \\ x_D^{(1)} & x_D^{(2)} & \cdots & x_D^{(N)} \\ 1 & 1 & \cdots & 1 \end{bmatrix} \in \mathbb{R}^{(D+1) \times N}, \qquad \mathbf{y} = \begin{bmatrix} y^{(1)} \\ y^{(2)} \\ \vdots \\ y^{(N)} \end{bmatrix} \in \mathbb{R}^{N \times 1}$$
+          <p>因此，所有 $N$ 个样本的预测值组成的列向量是 $\mathbf{X}^T\mathbf{w} \in \mathbb{R}^{N \times 1}$（因为 $\mathbf{X}^T$ 是 $N \times (D+1)$，乘以 $(D+1) \times 1$ 的 $\mathbf{w}$ 刚好得到 $N \times 1$）。训练集上的总平方误差（经验风险，<strong>Slide P.22</strong>）为：</p>
+          $$\mathcal{R}(\mathbf{w}) = \frac{1}{2}\sum_{n=1}^N \left(y^{(n)} - \mathbf{w}^T\mathbf{x}^{(n)}\right)^2 = \frac{1}{2}\left\|\mathbf{y} - \mathbf{X}^T\mathbf{w}\right\|^2$$
+
+          <details class="collapsible" open>
+            <summary>🔍 展开查看：最小二乘闭式解 $\mathbf{w}^* = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$ 的完整 5 步矩阵求导（对应 Slide P.23–24）</summary>
+            <div class="collapsible-body">
+              <p><strong>第 1 步（将范数平方写成向量内积并展开）</strong>：利用 $\|\mathbf{u}\|^2 = \mathbf{u}^T\mathbf{u}$ 以及标量等于其自身转置 $(\mathbf{y}^T\mathbf{X}^T\mathbf{w})^T = \mathbf{w}^T\mathbf{X}\mathbf{y}$：</p>
+              $$\mathcal{R}(\mathbf{w}) = \frac{1}{2}(\mathbf{y} - \mathbf{X}^T\mathbf{w})^T(\mathbf{y} - \mathbf{X}^T\mathbf{w}) = \frac{1}{2}\left(\mathbf{y}^T\mathbf{y} - 2\mathbf{w}^T\mathbf{X}\mathbf{y} + \mathbf{w}^T\mathbf{X}\mathbf{X}^T\mathbf{w}\right)$$
+              <p><strong>第 2 步（利用分母布局矩阵求导法则逐项求偏导，或用链式法则）</strong>：按课件 P.24 的链式求导写法，设残差向量 $\mathbf{e} = \mathbf{y} - \mathbf{X}^T\mathbf{w}$，则 $\frac{\partial \mathbf{e}}{\partial \mathbf{w}} = \frac{\partial (-\mathbf{X}^T\mathbf{w})}{\partial \mathbf{w}} = -(\mathbf{X}^T)^T = -\mathbf{X}$，而 $\frac{\partial (\frac{1}{2}\|\mathbf{e}\|^2)}{\partial \mathbf{e}} = \mathbf{e} = \mathbf{y} - \mathbf{X}^T\mathbf{w}$。由分母布局链式法则：</p>
+              $$\frac{\partial \mathcal{R}(\mathbf{w})}{\partial \mathbf{w}} = \frac{\partial \mathbf{e}}{\partial \mathbf{w}} \cdot \frac{\partial (\frac{1}{2}\|\mathbf{e}\|^2)}{\partial \mathbf{e}} = -\mathbf{X}(\mathbf{y} - \mathbf{X}^T\mathbf{w}) = -\mathbf{X}\mathbf{y} + \mathbf{X}\mathbf{X}^T\mathbf{w}$$
+              <p><strong>第 3 步（令梯度为零向量求解正规方程 Normal Equation）</strong>：</p>
+              $$-\mathbf{X}(\mathbf{y} - \mathbf{X}^T\mathbf{w}) = \mathbf{0} \implies \mathbf{X}\mathbf{X}^T\mathbf{w} = \mathbf{X}\mathbf{y}$$
+              <p><strong>第 4 步（左乘 $(\mathbf{X}\mathbf{X}^T)^{-1}$ 得出最优参数 $\mathbf{w}^*$，Slide P.24）</strong>：当矩阵 $\mathbf{X}\mathbf{X}^T \in \mathbb{R}^{(D+1)\times (D+1)}$ 满秩可逆（Full Rank）时：</p>
+              $$\mathbf{w}^* = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y} = \left(\sum_{n=1}^N \mathbf{x}^{(n)}(\mathbf{x}^{(n)})^T\right)^{-1}\left(\sum_{n=1}^N \mathbf{x}^{(n)}y^{(n)}\right)$$
+              <p><strong>第 5 步（何时 $\mathbf{X}\mathbf{X}^T$ 不可逆？Slide P.24–25 必考点）</strong>：</p>
+              <ul>
+                <li><strong>情况 A：样本数量少于特征维度（$N < D + 1$）</strong>。因为矩阵乘积的秩 $\text{rank}(\mathbf{X}\mathbf{X}^T) = \text{rank}(\mathbf{X}) \le \min(D+1, N) = N < D+1$，故 $(D+1)\times(D+1)$ 方阵 $\mathbf{X}\mathbf{X}^T$ 必然不满秩，不可逆！</li>
+                <li><strong>情况 B：特征之间存在多重共线性（Collinearity between features）</strong>。例如特征 $x_1$ 是房屋面积（平方米），特征 $x_2$ 是房屋面积（平方英尺），则 $\mathbf{X}$ 的行向量线性相关，导致 $\mathbf{X}\mathbf{X}^T$ 奇异（Singular）或近似奇异（此时微小的数据扰动都会引起 $(\mathbf{X}\mathbf{X}^T)^{-1}$ 剧烈震荡，数值极不稳定）。</li>
+              </ul>
+            </div>
+          </details>
+
+          <h4>结构风险最小化（SRM）与岭回归（Ridge Regression，Slide P.25）</h4>
+          <p>为了解决 $\mathbf{X}\mathbf{X}^T$ 不可逆或病态不稳定的问题，同时抑制过拟合，我们在经验风险后加上 $\ell_2$ 正则化项 $\frac{1}{2}\lambda\|\mathbf{w}\|^2$（$\lambda > 0$ 为正则化系数），得到<strong>结构风险（Structural Risk）</strong>：</p>
+          $$\mathcal{R}(\mathbf{w}) = \frac{1}{2}\left\|\mathbf{y} - \mathbf{X}^T\mathbf{w}\right\|^2 + \frac{1}{2}\lambda\|\mathbf{w}\|^2$$
+          <p>对 $\mathbf{w}$ 求偏导并令其为 $0$：</p>
+          $$\frac{\partial \mathcal{R}(\mathbf{w})}{\partial \mathbf{w}} = -\mathbf{X}(\mathbf{y} - \mathbf{X}^T\mathbf{w}) + \lambda\mathbf{w} = \mathbf{0} \implies (\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})\mathbf{w} = \mathbf{X}\mathbf{y} \implies \mathbf{w}^* = (\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})^{-1}\mathbf{X}\mathbf{y}$$
+          <div class="step-box step-supplement">
+            <div class="step-label">【补充深化】为什么加上 $\lambda\mathbf{I}$ ($\lambda > 0$) 后，$(\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})$ 一定可逆？</div>
+            <p>对任意非零向量 $\mathbf{v} \neq \mathbf{0}$，二次型 $\mathbf{v}^T(\mathbf{X}\mathbf{X}^T)\mathbf{v} = (\mathbf{X}^T\mathbf{v})^T(\mathbf{X}^T\mathbf{v}) = \|\mathbf{X}^T\mathbf{v}\|^2 \ge 0$，这说明 $\mathbf{X}\mathbf{X}^T$ 是<strong>半正定矩阵（Positive Semi-Definite）</strong>，其所有特征值 $\mu_i \ge 0$。加上 $\lambda\mathbf{I}$ 后，矩阵 $(\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})$ 的特征值全部平移为 $\mu_i + \lambda \ge \lambda > 0$！所有特征值严格大于 $0$ 的实对称矩阵是<strong>严格正定矩阵（Positive Definite）</strong>，行列式 $\prod (\mu_i + \lambda) > 0$，因此<strong>永远可逆</strong>（由于在矩阵对角线上加了一条常数“山岭 Ridge”，故名<strong>岭回归 Ridge Regression</strong>）。</p>
+          </div>
+
+          <h4>变体：对数线性回归（Log-linear Regression）与广义线性模型（GLM，Slide P.26）</h4>
+          <p>如果输出 $y$ 随输入 $\mathbf{x}$ 呈指数级增长，我们可以用线性模型去拟合 $y$ 的自然对数：$\ln y = \mathbf{w}^T\mathbf{x} + b \iff y = e^{\mathbf{w}^T\mathbf{x}+b}$（<strong>Slide P.26</strong>）。虽然它在原始输入输出空间是曲线，但在对数变换空间 $y' = \ln y$ 中依然是标准线性回归！更一般地，引入单调可微的<strong>连接函数（Link Function）$g(\cdot)$</strong>，令 $g(y) = \mathbf{w}^T\mathbf{x}+b \iff y = g^{-1}(\mathbf{w}^T\mathbf{x}+b)$，即称为<strong>广义线性模型（Generalized Linear Model, GLM）</strong>。</p>
+
+          <h4>多项式曲线拟合（Polynomial Curve Fitting）与过拟合控制（Slides P.27 – P.34）</h4>
+          <p>对于一维输入 $x$，令基函数映射 $\phi(x) = [1, x, x^2, \dots, x^M]^T$，则模型为 $M$ 阶多项式 $f(x;\mathbf{w}) = \sum_{j=0}^M w_j x^j$（<strong>Slide P.28</strong>）。注意：虽然 $f(x;\mathbf{w})$ 关于自变量 $x$ 是非线性的，但它<strong>关于参数 $\mathbf{w}$ 依然是线性的</strong>，因此求解过程与线性回归完全相同！</p>
+          <ul>
+            <li><strong>模型选择问题（How to Choose Polynomial Degree $M$? Slide P.30–31）</strong>：在 $N=10$ 个带噪声的正弦曲线 $\sin(2\pi x)$ 样本上，$M=0$（常数水平线）和 $M=1$（直线）严重<strong>欠拟合</strong>；$M=3$ 恰到好处地还原了正弦波形；而 $M=9$ 时，因为包含 $w_0 \dots w_9$ 共 $10$ 个自由参数（恰好等于样本数 $N=10$），多项式曲线精确穿过了每一个噪声点使训练误差 $E(\mathbf{w}) = 0$，但在样本点之间剧烈振荡，发生严重<strong>过拟合</strong>！</li>
+            <li><strong>控制过拟合的两大法宝（Slides P.32 – P.34）</strong>：
+              <br/>① <strong>正则化惩罚大系数（Slide P.32–33）</strong>：保持 $M=9$ 不变，最小化 $\hat{\mathcal{R}}(\mathbf{w}) = \frac{1}{2}\sum_{n=1}^N (y^{(n)} - \mathbf{w}^T\phi(x^{(n)}))^2 + \frac{\lambda}{2}\mathbf{w}^T\mathbf{w}$（其中 $\|\mathbf{w}\|^2 = \mathbf{w}^T\mathbf{w} = w_0^2 + w_1^2 + \dots + w_M^2$）。当 $\ln\lambda = -18$ 时，原本百万级的系数被压缩到百位以内，$M=9$ 的多项式依然拟合出光滑优美的正弦曲线；但若正则化过猛（如 $\ln\lambda = 0$ 即 $\lambda=1$），所有权重被压制到接近 $0$，模型退化为平缓曲线，导致<strong>欠拟合</strong>！
+              <br/>② <strong>增加训练样本数量（Slide P.34）</strong>：同样是无正则化的 $M=9$ 多项式，当样本数从 $N=15$ 增加到 $N=100$ 时，密集的数据点限制了高阶多项式胡乱扭曲的自由度，过拟合自然消失！
+            </li>
+          </ul>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>系数 $w_j^*$</th>
+                  <th>$M=0$ (Slide P.31)</th>
+                  <th>$M=1$ (Slide P.31)</th>
+                  <th>$M=3$ (Slide P.31)</th>
+                  <th>$M=9, \ln\lambda=-\infty$ (无正则，P.31/33)</th>
+                  <th>$M=9, \ln\lambda=-18$ (适度正则，P.33)</th>
+                  <th>$M=9, \ln\lambda=0$ (过度正则，P.33)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>$w_0^*$</td><td>$0.19$</td><td>$0.82$</td><td>$0.31$</td><td>$0.35$</td><td>$0.35$</td><td>$0.13$</td></tr>
+                <tr><td>$w_1^*$</td><td>—</td><td>$-1.27$</td><td>$7.99$</td><td>$232.37$</td><td>$4.74$</td><td>$-0.05$</td></tr>
+                <tr><td>$w_2^*$</td><td>—</td><td>—</td><td>$-25.43$</td><td>$-5321.83$</td><td>$-0.77$</td><td>$-0.06$</td></tr>
+                <tr><td>$w_3^*$</td><td>—</td><td>—</td><td>$17.37$</td><td>$48568.31$</td><td>$-31.97$</td><td>$-0.05$</td></tr>
+                <tr><td>$w_4^*$</td><td>—</td><td>—</td><td>—</td><td>$-231639.30$</td><td>$-3.89$</td><td>$-0.03$</td></tr>
+                <tr><td>$w_5^*$</td><td>—</td><td>—</td><td>—</td><td>$640042.26$</td><td>$55.28$</td><td>$-0.02$</td></tr>
+                <tr><td>$w_6^*$</td><td>—</td><td>—</td><td>—</td><td>$-1061800.52$</td><td>$41.32$</td><td>$-0.01$</td></tr>
+                <tr><td>$w_7^*$</td><td>—</td><td>—</td><td>—</td><td>$1042400.18$</td><td>$-45.95$</td><td>$-0.00$</td></tr>
+                <tr><td>$w_8^*$</td><td>—</td><td>—</td><td>—</td><td>$-557682.99$</td><td>$-91.53$</td><td>$0.00$</td></tr>
+                <tr><td>$w_9^*$</td><td>—</td><td>—</td><td>—</td><td>$125201.43$</td><td>$72.68$</td><td>$0.01$</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="step-box step-example">
+          <div class="step-label">Step 5 · Example — 完整数值手算例题：最小二乘 vs 岭回归</div>
+          <p><strong>题目</strong>：设增广后的一维无偏置数据集含 $N=2$ 个样本：$x^{(1)} = 1, y^{(1)} = 2$；$x^{(2)} = 2, y^{(2)} = 3$，模型为 $f(x;w) = wx$。(1) 求最小二乘解 $w^{ML}$；(2) 若设岭回归系数 $\lambda = 3$，求岭回归解 $w^{Ridge}$。</p>
+          <p><strong>逐步解答</strong>：</p>
+          <ol>
+            <li>构造矩阵：按课件约定，$\mathbf{X} = [1, 2] \in \mathbb{R}^{1 \times 2}$，$\mathbf{y} = [2, 3]^T \in \mathbb{R}^{2 \times 1}$。</li>
+            <li>计算 $\mathbf{X}\mathbf{X}^T$ 与 $\mathbf{X}\mathbf{y}$：$\mathbf{X}\mathbf{X}^T = 1^2 + 2^2 = 5$，$\mathbf{X}\mathbf{y} = 1\times 2 + 2\times 3 = 8$。</li>
+            <li>最小二乘解：$w^{ML} = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y} = \frac{8}{5} = 1.6$。</li>
+            <li>岭回归解（$\lambda = 3$）：$w^{Ridge} = (\mathbf{X}\mathbf{X}^T + \lambda I)^{-1}\mathbf{X}\mathbf{y} = \frac{8}{5 + 3} = \frac{8}{8} = 1.0$。可以看到，正则化将权重从 $1.6$ 收缩（Shrink）到了更小的 $1.0$。</li>
+          </ol>
+        </div>
+
+        <!-- Interactive Lab 2.2: Polynomial Curve Fitting & Regularization -->
+        <div class="interactive-lab">
+          <div class="lab-header">
+            <div class="lab-title">🎛️ 交互式实验室 2.2：多项式阶数 $M$ 与 $\ell_2$ 正则化 $\ln\lambda$ 实时拟合实验 (复刻 Slides P.30–34)</div>
+            <span class="slide-badge">Interactive Curve Fitting</span>
+          </div>
+          <p style="font-size:0.88rem;">拖动滑块改变多项式阶数 $M \in [0, 9]$、正则化强度 $\ln\lambda$ 以及训练样本数 $N$，实时观察绿色真实正弦曲线 $\sin(2\pi x)$ 与红色拟合曲线的变化：</p>
+          <div class="lab-controls">
+            <div class="control-group">
+              <label><span>多项式阶数 $M$ (Degree)</span><span id="poly-m-val">3</span></label>
+              <input type="range" id="poly-m" min="0" max="9" step="1" value="3" />
+            </div>
+            <div class="control-group">
+              <label><span>正则化强度 $\ln\lambda$ (-30=无正则)</span><span id="poly-lam-val">-30</span></label>
+              <input type="range" id="poly-lam" min="-30" max="2" step="2" value="-30" />
+            </div>
+            <div class="control-group">
+              <label><span>训练样本数量 $N$</span><span id="poly-n-val">10</span></label>
+              <input type="range" id="poly-n" min="6" max="50" step="2" value="10" />
+            </div>
+          </div>
+          <div class="lab-canvas-wrap">
+            <canvas id="poly-canvas" class="lab-canvas" width="760" height="300"></canvas>
+          </div>
+          <div class="lab-stats">
+            <div class="stat-card"><div class="stat-label">训练集均方根误差 (Train RMSE)</div><div class="stat-val" id="poly-train-err">0.12</div></div>
+            <div class="stat-card"><div class="stat-label">测试集泛化误差 (Test RMSE)</div><div class="stat-val" id="poly-test-err">0.15</div></div>
+            <div class="stat-card"><div class="stat-label">最大权重绝对值 $\max|w_j|$</div><div class="stat-val" id="poly-max-w">18.4</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.2 ==================== -->
+      <section id="sec-2-2" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.2 概率分布、逆变换采样与大数定律 (Probability &amp; Sampling)</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.35 – P.49</span>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — 核心离散/连续分布与随机向量（Slides P.36 – P.43）</div>
+          <div class="grid-2">
+            <div class="info-card">
+              <h4>1. 离散随机变量分布 (Slides P.36–38)</h4>
+              <ul>
+                <li><strong>概率公理</strong>：$p(x_i) \ge 0$，且 $\sum_{i=1}^n p(x_i) = 1$。</li>
+                <li><strong>伯努利分布（Bernoulli Distribution，P.37）</strong>：单次抛硬币试验，事件 $A$ 发生概率为 $\mu \in [0,1]$，不发生概率为 $1-\mu$。对于 $X \in \{0, 1\}$，将其浓缩为一个幂次公式（这也是逻辑回归似然函数的基石！）：
+                  $$p(x) = \mu^x (1-\mu)^{1-x}$$
+                </li>
+                <li><strong>二项分布（Binomial Distribution，P.38）</strong>：$n$ 次独立伯努利试验中事件发生 $k$ 次的概率：
+                  $$p(X = k) = \binom{n}{k}\mu^k(1-\mu)^{n-k}, \quad \binom{n}{k}=\frac{n!}{k!(n-k)!}$$
+                </li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h4>2. 连续随机变量分布 (Slides P.39–40)</h4>
+              <ul>
+                <li><strong>概率密度函数（PDF）与累积分布函数（CDF）</strong>：满足 $\int_{-\infty}^{+\infty} f(x)dx = 1$，且 $F(x) = P(X \le x) = \int_{-\infty}^x f(t)dt$（PDF 是 CDF 的导数）。</li>
+                <li><strong>高斯分布 / 正态分布（Gaussian Distribution，P.39）</strong>：$X \sim \mathcal{N}(\mu, \sigma^2)$，均值 $\mu$ 决定钟形曲线中心，标准差 $\sigma$ 决定胖瘦宽度：
+                  $$p(x) = \frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)$$
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h4>3. 联合分布、边缘分布与条件概率（Slides P.41 – P.44）</h4>
+          <ul>
+            <li><strong>边缘分布（Marginal Distribution，Slide P.42）</strong>：“边缘化（Marginalization）就是对不关心的变量求和（离散）或积分（连续）消元”：
+              $$p_X(x_i) = \sum_j p(x_i, y_j), \qquad f_X(x) = \int_{-\infty}^{+\infty} f(x, y)dy$$
+            </li>
+            <li><strong>条件概率（Conditional Probability，Slide P.43）</strong>：在已知 $X=x$ 发生的条件下，$Y=y$ 的概率等于联合概率除以边缘概率：$p(y|x) = P(Y=y \mid X=x) = \frac{p(x,y)}{p(x)}$。</li>
+          </ul>
+
+          <div class="step-box step-example">
+            <div class="step-label">原课件 P.44 必考例题 · 性别与行业联合概率表计算</div>
+            <p><strong>已知联合概率表（Slide P.44）</strong>：$p(\text{男}, \text{计算机}) = 0.4$，$p(\text{男}, \text{教育}) = 0.1$；$p(\text{女}, \text{计算机}) = 0.1$，$p(\text{女}, \text{教育}) = 0.4$。</p>
+            <ul>
+              <li><strong>行求和（性别边缘概率）</strong>：$p(\text{男}) = 0.4 + 0.1 = 0.5$，$p(\text{女}) = 0.1 + 0.4 = 0.5$。</li>
+              <li><strong>列求和（行业边缘概率）</strong>：$p(\text{计算机}) = 0.4 + 0.1 = 0.5$，$p(\text{教育}) = 0.1 + 0.4 = 0.5$。</li>
+              <li><strong>求条件概率 $p(\text{男} \mid \text{计算机})$</strong>：
+                $$p(\text{男} \mid \text{计算机}) = \frac{p(\text{男}, \text{计算机})}{p(\text{计算机})} = \frac{0.4}{0.5} = 0.8$$
+              </li>
+            </ul>
+          </div>
+
+          <h4>4. 随机采样原理：从均匀分布到逆变换采样证明（Slides P.45 – P.47）</h4>
+          <p>计算机底层只能通过<strong>线性同余发生器（Linear Congruential Generator, LCG，Slide P.46 左）</strong> `next = next * 1103515245 + 12345` 生成 $[0, 1)$ 上的伪随机均匀分布 $U \sim \text{Uniform}(0,1)$。如何利用 $U \sim \text{Uniform}(0,1)$ 对任意分布 $p(x)$ 进行采样？</p>
+          <ul>
+            <li><strong>离散分布区间采样（Slide P.46 右）</strong>：若 $p(a_1)=0.6, p(a_2)=0.1, p(a_3)=0.3$，把 $[0,1)$ 划分为 $[0, 0.6)$、$[0.6, 0.7)$、$[0.7, 1.0)$ 三段。抽一个 $u \sim \text{Uniform}(0,1)$，落在哪段就输出对应的 $a_i$！</li>
+            <li><strong>连续分布逆变换采样（Inverse Transform Sampling，Slide P.47）</strong>：设目标随机变量 $X$ 的累积分布函数（CDF）为 $F$（连续且严格单调递增，故存在反函数 $F^{-1}$）。先采样 $U \sim \text{Uniform}(0,1)$，再计算 $Y = F^{-1}(U)$，则 $Y$ 与 $X$ 严格同分布！
+              <br/><strong>零跳步数学证明（Slide P.47 右）</strong>：因为 $U \sim \text{Uniform}(0,1)$ 在 $[0,1]$ 上满足 $\mathbb{P}(U \le u) = u$，且 $F$ 单调递增保持不等号方向不变，故 $Y$ 的 CDF 为：
+              $$\mathbb{P}(Y \le y) = \mathbb{P}\left(F^{-1}(U) \le y\right) = \mathbb{P}\left(U \le F(y)\right) = F(y)$$
+              由于 $Y$ 与 $X$ 具有完全相同的累积分布函数 $F(y)$，故 $Y$ 与 $X$ 同分布！（注：对于离散或非严格单调分布，使用广义反函数/右连续分位数函数 $F^{-1}(u) = \inf\{x : F(x) \ge u\}$）。
+            </li>
+          </ul>
+
+          <h4>5. 数学期望与大数定律（Law of Large Numbers，Slides P.48 – P.49）</h4>
+          <p>随机变量的期望（Expectation）为 $\mathbb{E}[X] = \sum_{n=1}^N x_n p(x_n)$（离散）或 $\int_{-\infty}^{+\infty} x f(x)dx$（连续）。<strong>大数定律（Slide P.49）</strong>指出：当独立同分布（I.I.D.）样本量 $N \to \infty$ 时，样本算术均值依概率收敛于真实数学期望：$\bar{x}_N = \frac{1}{N}(x^{(1)} + \cdots + x^{(N)}) \to \mathbb{E}[X]$。这正是机器学习中<strong>“当样本足够多时，经验风险 $\mathcal{R}_{\mathcal{D}}^{emp}(f)$ 必然收敛于真实期望风险 $\mathcal{R}(f)$”</strong>的根本概率论依据！</p>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.5 (Reordered logically after 2.1 & 2.2) ==================== -->
+      <section id="sec-2-5" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.5 线性回归的概率视角：极大似然 (MLE) 与最大后验 (MAP)</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.97 – P.106</span>
+        </div>
+
+        <div class="step-box step-why">
+          <div class="step-label">Step 1 &amp; 2 · Why &amp; Intuition — 为什么要从概率视角重看线性回归？</div>
+          <p>在 2.1 节中，我们凭直觉选择了“平方误差损失”和“$\ell_2$ 正则化项 $\frac{1}{2}\lambda\|\mathbf{w}\|^2$”。你可能会问：<em>为什么偏偏是平方误差而不是三次方或四次方？为什么正则化偏偏是权重的平方和？</em> <strong>Slides P.97–106</strong> 给出了震撼的答案：一旦从概率统计视角出发，<strong>最小二乘法（ERM）就是高斯噪声下的极大似然估计（MLE），而岭回归（SRM）就是给权重加上高斯先验后的最大后验估计（MAP）！</strong></p>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — MLE 与 MAP 导出最小二乘与岭回归的完整推导</div>
+          <h4>(1) 极大似然估计（Maximum Likelihood Estimation, MLE，Slides P.98 – P.101）</h4>
+          <p>假设真实标签 $y$ 是在线性预测 $\mathbf{w}^T\mathbf{x}$ 基础上叠加了一个均值为 $0$、方差为 $\sigma^2$ 的高斯噪声 $\epsilon \sim \mathcal{N}(0, \sigma^2)$，即条件概率分布为（<strong>Slide P.98</strong>）：</p>
+          $$p(y \mid \mathbf{x}; \mathbf{w}, \sigma) = \mathcal{N}(y; \mathbf{w}^T\mathbf{x}, \sigma^2) = \frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{(y - \mathbf{w}^T\mathbf{x})^2}{2\sigma^2}\right)$$
+          <p><strong>区分“概率”与“似然”（Slide P.99 必考概念）</strong>：当参数 $\mathbf{w}$ 固定、把 $\mathbf{x}, y$ 看作变量时，$p(y|\mathbf{x};\mathbf{w})$ 描述随机变量的分布，称为<strong>概率（Probability）</strong>；当观测样本数据 $\mathcal{D}$ 已经固定已知、把参数 $\mathbf{w}$ 看作自变量时，它描述不同参数 $\mathbf{w}$ 生成当前观测数据的可能性，称为<strong>似然函数（Likelihood Function）</strong>。</p>
+          <p>因为 $N$ 个训练样本独立同分布，联合似然函数等于各样本条件概率的连乘积（<strong>Slide P.100–101</strong>）：</p>
+          $$L(\mathbf{w}) = p(\mathbf{y} \mid \mathbf{X}; \mathbf{w}, \sigma) = \prod_{n=1}^N p(y^{(n)} \mid \mathbf{x}^{(n)}; \mathbf{w}, \sigma) = \prod_{n=1}^N \mathcal{N}(y^{(n)}; \mathbf{w}^T\mathbf{x}^{(n)}, \sigma^2)$$
+          <p><strong>课件 P.100 统计学概念精析（极大似然估计值 vs 极大似然统计量 &amp; 对数似然方程）</strong>：设 $X_1, X_2, \dots, X_n$ 是来自总体 $X$ 的随机样本，$x_1, x_2, \dots, x_n$ 是具体观测样本值。令 $\hat{w} = \arg\max_w L(x_1, \dots, x_n; w)$，其中关于具体观测值的函数 $\hat{w}(x_1, \dots, x_n)$ 称为<strong>极大似然估计值（Maximum Likelihood Estimate）</strong>，而关于随机变量的函数 $\hat{w}(X_1, \dots, X_n)$ 称为<strong>极大似然统计量 / 估计量（Maximum Likelihood Statistic）</strong>。由于连乘积求导困难且容易数值下溢，且 $\log(\cdot)$ 严格单调递增，求解驻点方程 $\frac{d L(w)}{dw} = 0$ 完全等价于求解<strong>对数似然方程（Log-Likelihood Equation，Slide P.100）</strong>：$\frac{d \log L(w)}{dw} = 0$：</p>
+          $$\ln p(\mathbf{y} \mid \mathbf{X}; \mathbf{w}, \sigma) = \sum_{n=1}^N \ln\left[\frac{1}{\sqrt{2\pi}\sigma}\exp\left(-\frac{(y^{(n)} - \mathbf{w}^T\mathbf{x}^{(n)})^2}{2\sigma^2}\right)\right] = -N\ln(\sqrt{2\pi}\sigma) - \frac{1}{2\sigma^2}\sum_{n=1}^N \left(y^{(n)} - \mathbf{w}^T\mathbf{x}^{(n)}\right)^2$$
+          <p>注意第一项与 $\mathbf{w}$ 无关！因此，<strong>最大化对数似然 $\ln p(\mathbf{y}|\mathbf{X};\mathbf{w},\sigma)$ 完全等价于最小化平方误差和 $\frac{1}{2}\sum_{n=1}^N (y^{(n)}-\mathbf{w}^T\mathbf{x}^{(n)})^2$</strong>！令 $\frac{\partial \ln p(\mathbf{y}|\mathbf{X};\mathbf{w},\sigma)}{\partial \mathbf{w}} = \mathbf{0}$，立即得到极大似然解（<strong>Slide P.101</strong>）：</p>
+          $$\mathbf{w}^{ML} = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$$
+
+          <h4>(2) 贝叶斯线性回归与最大后验估计（MAP，Slides P.102 – P.106）</h4>
+          <p>当训练样本较少时，MLE 容易过拟合。贝叶斯学派（Bayesian Perspective，<strong>Slide P.102</strong>）认为参数 $\mathbf{w}$ 本身也是一个随机变量，在看到数据之前，我们对 $\mathbf{w}$ 有一个<strong>先验分布（Prior）</strong>：认为好模型的权重不应该太大，而是聚集在 $0$ 附近，即服从均值为 $\mathbf{0}$、协方差为 $\nu^2\mathbf{I}$ 的高斯先验（<strong>Slide P.104</strong>）：</p>
+          $$p(\mathbf{w}; \nu) = \mathcal{N}(\mathbf{w}; \mathbf{0}, \nu^2\mathbf{I}) = \frac{1}{(2\pi\nu^2)^{(D+1)/2}}\exp\left(-\frac{\mathbf{w}^T\mathbf{w}}{2\nu^2}\right)$$
+          <p>根据贝叶斯法则（<strong>Slide P.103–104</strong>），观测到数据 $(\mathbf{X}, \mathbf{y})$ 后，参数 $\mathbf{w}$ 的<strong>后验分布（Posterior）正比于似然乘以先验</strong>：</p>
+          $$\underbrace{p(\mathbf{w} \mid \mathbf{X}, \mathbf{y}; \nu, \sigma)}_{\text{后验 Posterior}} \propto \underbrace{p(\mathbf{y} \mid \mathbf{X}, \mathbf{w}; \sigma)}_{\text{似然 Likelihood}} \times \underbrace{p(\mathbf{w}; \nu)}_{\text{先验 Prior}}$$
+          <p>两边取对数并略去与 $\mathbf{w}$ 无关的常数项（<strong>Slide P.104</strong>）：</p>
+          $$\ln p(\mathbf{w} \mid \mathbf{X}, \mathbf{y}; \nu, \sigma) \propto \ln p(\mathbf{y} \mid \mathbf{X}, \mathbf{w}; \sigma) + \ln p(\mathbf{w}; \nu) \propto -\frac{1}{2\sigma^2}\left\|\mathbf{y} - \mathbf{X}^T\mathbf{w}\right\|^2 - \frac{1}{2\nu^2}\mathbf{w}^T\mathbf{w}$$
+          <p><strong>最大后验估计（Maximum A Posteriori, MAP，Slide P.105）</strong>就是寻找使后验概率最大的点估计 $\mathbf{w}^{MAP} = \arg\max_{\mathbf{w}} \ln p(\mathbf{w}|\mathbf{X},\mathbf{y};\nu,\sigma)$（<em>注：课件 P.105 下方公式将 $\arg\max_{\mathbf{w}}$ 简写成了等号，书写考卷时务必保留 $\arg\max_{\mathbf{w}}$！</em>）。将上式同乘 $-\sigma^2$（最大化变最小化）：</p>
+          $$\mathbf{w}^{MAP} = \arg\min_{\mathbf{w}} \left[ \frac{1}{2}\left\|\mathbf{y} - \mathbf{X}^T\mathbf{w}\right\|^2 + \frac{1}{2}\underbrace{\frac{\sigma^2}{\nu^2}}_{\lambda}\mathbf{w}^T\mathbf{w} \right] \implies \mathbf{w}^{MAP} = (\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})^{-1}\mathbf{X}\mathbf{y}, \quad \text{其中 } \lambda = \frac{\sigma^2}{\nu^2}$$
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>线性回归两大视角大一统总结表 (复刻 Slide P.106)</th>
+                  <th>无先验知识 (Without Prior)</th>
+                  <th>有高斯先验知识 (With Prior $p(\mathbf{w})=\mathcal{N}(\mathbf{0},\nu^2\mathbf{I})$)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>优化与损失视角 (Square Error)</strong></td>
+                  <td>经验风险最小化 (ERM / Least Squares)</td>
+                  <td>结构风险最小化 (SRM / Ridge Regression)</td>
+                </tr>
+                <tr>
+                  <td><strong>概率统计视角 (Probability)</strong></td>
+                  <td>极大似然估计 (MLE)</td>
+                  <td>最大后验估计 (MAP, $\lambda = \sigma^2/\nu^2$)</td>
+                </tr>
+                <tr>
+                  <td><strong>最优参数闭式解</strong></td>
+                  <td>$\mathbf{w}^{ML} = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$</td>
+                  <td>$\mathbf{w}^* = (\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})^{-1}\mathbf{X}\mathbf{y}$</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.3 ==================== -->
+      <section id="sec-2-3" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.3 朴素贝叶斯分类与文本分类实战 (Naïve Bayes Classification)</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.50 – P.70</span>
+        </div>
+
+        <div class="step-box step-why">
+          <div class="step-label">Step 1 &amp; 2 · Why &amp; Intuition — 为什么贝叶斯分类器要加上“朴素（Naïve）”二字？</div>
+          <p>设样本有 $d = |A|$ 个离散属性 $A_1, A_2, \dots, A_{|A|}$，类别变量为 $C \in \{c_1, \dots, c_{|C|}\}$。给定一个测试样本观测值 $(a_1, \dots, a_{|A|})$，贝叶斯决策要求我们选出后验概率 $\Pr(C=c_j \mid A_1=a_1, \dots, A_{|A|}=a_{|A|})$ 最大的类别 $c_j$（<strong>Slide P.51</strong>）。由贝叶斯法则（<strong>Slide P.52</strong>）：</p>
+          $$\Pr(C=c_j \mid A_1=a_1, \dots, A_{|A|}=a_{|A|}) = \frac{\Pr(A_1=a_1, \dots, A_{|A|}=a_{|A|} \mid C=c_j)\Pr(C=c_j)}{\Pr(A_1=a_1, \dots, A_{|A|}=a_{|A|})}$$
+          <p>其中分母对所有类别 $c_j$ 都完全相同，决策时可以直接丢弃（<strong>Slide P.53</strong>）。但致命难题在分子的第一项：联合似然 $\Pr(A_1=a_1, \dots, A_{|A|}=a_{|A|} \mid C=c_j)$！如果一个样本有 $30$ 个二值属性，每个类别下就有 $2^{30} \approx 10.7\text{ 亿}$ 种属性组合，任何有限训练集里绝大多数属性组合出现的次数都是 $0$！</p>
+          <p>为了打破这个维度灾难，我们引入了一个大胆而“天真（Naïve）”的假设——<strong>属性条件独立性假设（Conditional Independence Assumption，Slide P.54）</strong>：假设在给定类别 $C=c_j$ 的条件下，所有属性之间彼此独立！于是高维联合概率瞬间拆解成了每个属性单独条件概率的乘积：</p>
+          $$\Pr(A_1=a_1, \dots, A_{|A|}=a_{|A|} \mid C=c_j) = \prod_{i=1}^{|A|} \Pr(A_i = a_i \mid C=c_j)$$
+          <p>最终，<strong>朴素贝叶斯分类器（Naïve Bayesian Classifier，Slide P.55–56）</strong>的预测准则为：</p>
+          $$c^* = \arg\max_{c_j \in C} \Pr(C=c_j) \prod_{i=1}^{|A|} \Pr(A_i = a_i \mid C = c_j)$$
+        </div>
+
+        <div class="step-box step-example">
+          <div class="step-label">Step 5 · Example 1 — 原课件 P.57–58 必考 10 样本 $(A, B, C)$ 手算分类全过程</div>
+          <p><strong>训练数据集（Slide P.57 右表，共 $N=10$ 条记录）</strong>：</p>
+          <ul>
+            <li>属于正类 $C = t$ 的有 $5$ 条：$(m, b, t), (m, s, t), (g, q, t), (h, s, t), (g, q, t)$；</li>
+            <li>属于负类 $C = f$ 的有 $5$ 条：$(g, q, f), (g, s, f), (h, b, f), (h, q, f), (m, b, f)$。</li>
+          </ul>
+          <p><strong>任务</strong>：预测测试样本 $(A = m, B = q)$ 属于哪一类？</p>
+          <p><strong>第 1 步（计算类别先验概率）</strong>：$\Pr(C = t) = \frac{5}{10} = \frac{1}{2}$，$\Pr(C = f) = \frac{5}{10} = \frac{1}{2}$。</p>
+          <p><strong>第 2 步（统计测试样本涉及的条件概率）</strong>：
+            <br/>• 在 $C=t$ 的 $5$ 条样本中：$A=m$ 出现 $2$ 次 $\implies \Pr(A=m \mid C=t) = \frac{2}{5}$；$B=q$ 出现 $2$ 次 $\implies \Pr(B=q \mid C=t) = \frac{2}{5}$。
+            <br/>• 在 $C=f$ 的 $5$ 条样本中：$A=m$ 出现 $1$ 次 $\implies \Pr(A=m \mid C=f) = \frac{1}{5}$；$B=q$ 出现 $2$ 次 $\implies \Pr(B=q \mid C=f) = \frac{2}{5}$。
+            <br/><em>（注：原课件 P.57 右下角写有 `Pr(A=h|C=n)=2/5`，其中 `C=n` 是课件制作时的笔误，实际指 `C=f`）。</em>
+          </p>
+          <p><strong>第 3 步（计算两类的后验分子并比大小，Slide P.58）</strong>：</p>
+          $$\text{Score}(C=t) = \Pr(C=t)\Pr(A=m \mid C=t)\Pr(B=q \mid C=t) = \frac{1}{2} \times \frac{2}{5} \times \frac{2}{5} = \frac{2}{25} = 0.08$$
+          $$\text{Score}(C=f) = \Pr(C=f)\Pr(A=m \mid C=f)\Pr(B=q \mid C=f) = \frac{1}{2} \times \frac{1}{5} \times \frac{2}{5} = \frac{1}{25} = 0.04$$
+          <p>因为 $\frac{2}{25} > \frac{1}{25}$（若归一化后验概率则为 $\Pr(C=t \mid A=m, B=q) = \frac{2/25}{2/25 + 1/25} = \frac{2}{3} \approx 66.7\%$），最终判定该测试样本属于类别 <strong>$C = t$</strong>！</p>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — 零概率灾难与拉普拉斯平滑（Smoothing，Slide P.59）</div>
+          <p>在实际应用中，朴素贝叶斯面临三大额外问题（<strong>Slide P.59</strong>）：① <strong>数值型属性（Numeric attributes）</strong>需先离散化（或假设服从高斯分布）；② <strong>缺失值（Missing values）</strong>在统计和预测时直接忽略该属性；③ <strong>零计数问题（Zero counts）</strong>：如果某个属性取值 $A_i = a_i$ 在训练集的某个类别 $c_j$ 中恰好出现了 $0$ 次（$n_{ij} = 0$），那么 $\Pr(A_i=a_i \mid C=c_j) = 0$，连乘积 $\prod_{i=1}^{|A|}$ 会产生<strong>“一票否决”效应</strong>，把其他所有属性提供的强有力证据全部清零！</p>
+          <div class="formula-card">
+            <strong>平滑估计公式（Laplace / Lidstone Smoothing，Slide P.59）</strong>
+            $$\Pr(A_i = a_i \mid C = c_j) = \frac{n_{ij} + \lambda}{n_j + \lambda S_i}, \qquad \Pr(C = c_j) = \frac{n_j + \lambda}{N + \lambda K}$$
+            <div class="var-list">
+              <div class="var-item"><span class="var-sym">$n_{ij}$</span><span>训练集中类别为 $c_j$ 且第 $i$ 个属性取值为 $a_i$ 的样本数</span></div>
+              <div class="var-item"><span class="var-sym">$n_j, N$</span><span>$n_j$ 为类别 $c_j$ 的总样本数，$N$ 为训练集总样本数</span></div>
+              <div class="var-item"><span class="var-sym">$S_i, K$</span><span>$S_i$ 为属性 $A_i$ 可能的取值总数，$K$ 为类别总数 $|C|$</span></div>
+              <div class="var-item"><span class="var-sym">$\lambda$</span><span>平滑常数（常取 $\lambda = 1$，称为拉普拉斯平滑 Laplace Smoothing）</span></div>
+            </div>
+          </div>
+          <p><em>为什么分子加 $\lambda$，分母必须加 $\lambda S_i$？</em> 因为属性 $A_i$ 共有 $S_i$ 种可能取值，每个取值的分子都加了 $\lambda$，共多加了 $S_i$ 个 $\lambda$；分母加上 $\lambda S_i$ 才能保证对所有可能取值求和 $\sum_{k=1}^{S_i} \frac{n_{ik}+\lambda}{n_j+\lambda S_i} = \frac{n_j + \lambda S_i}{n_j + \lambda S_i} = 1$，严格满足概率归一化公理！</p>
+        </div>
+
+        <div class="step-box step-example">
+          <div class="step-label">Step 5 · Example 2 — 词袋模型（Bag of Words）、文本分类通用工作流与原课件 P.61–70 GPU 完整例题</div>
+          <p><strong>1. 词袋表示与文档级 MAP 公式（Slides P.61–65）</strong>：面对一篇影评或文章 $d$，<strong>词袋模型（Bag of Words, BoW）</strong>忽略语法与词序，剔除无意义停用词（如 `I, this, it's`，<strong>Slide P.63</strong>），仅统计情感/主题关键词的词频向量（如 `great: 2, love: 2, recommend: 1, laugh: 1, happy: 1`，<strong>Slide P.64</strong>）。设文档 $d$ 包含词序列 $(w_1, w_2, \dots, w_{n_d})$，应用贝叶斯法则并丢弃常数分母 $P(d)$，得到文档的<strong>最大后验类别（MAP Class，Slide P.65）</strong>：</p>
+          $$c_{MAP} = \arg\max_{c \in C} P(c \mid d) = \arg\max_{c \in C} \frac{P(d \mid c)P(c)}{P(d)} = \arg\max_{c \in C} P(d \mid c)P(c) = \arg\max_{c \in C} P(c)\prod_{i=1}^{n_d} P(w_i \mid c)$$
+          <p><strong>2. 文本分类通用工作流（Slide P.66）</strong>：① <strong>训练阶段</strong>：原始训练文本集 $\to$ 预处理（分词、去停用词）与特征提取（构建词表与词频向量） $\to$ 机器学习算法统计先验 $P(c)$ 与条件概率 $P(w_i|c)$ 生成分类器；② <strong>预测阶段</strong>：新测试文本 $\to$ 相同预处理与特征提取 $\to$ 输入分类器输出预测类别 $\gamma(d) = c$。</p>
+          <p><strong>3. 原课件 P.67–70 完整 4 文档特征向量表与手算复现</strong>：从训练语料中提取出与 `computer graphics` 相关的核心词表 $\{\text{Nvidia}, \text{GPU}, \text{AMD}, \text{GTX 1050}\}$，将每条文本转化为词频特征向量（如 `Nvidia` 在 4 条记录中的出现列向量为 $[1; 1; 0; 0]$，<strong>Slide P.69</strong>）：</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>记录 ID</th>
+                  <th>原始文本内容 (Slides P.67–68)</th>
+                  <th>Nvidia</th>
+                  <th>GPU</th>
+                  <th>AMD</th>
+                  <th>GTX 1050</th>
+                  <th>真实类别 Class</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td><em>"Nvidia GPU is the best in the world."</em></td><td>1</td><td>1</td><td>0</td><td>0</td><td><code>computer graphics</code></td></tr>
+                <tr><td>2</td><td><em>"Nvidia is giving tough competition to AMD."</em></td><td>1</td><td>0</td><td>1</td><td>0</td><td><code>computer graphics</code></td></tr>
+                <tr><td>3</td><td><em>"We were running our application with GTX 1050 (High end GPU)..."</em></td><td>0</td><td>1</td><td>0</td><td>1</td><td><code>computer graphics</code></td></tr>
+                <tr><td>4</td><td><em>"GPU, Ganpat Pandey University, is located in Maharashtra."</em> (缩写重名歧义！)</td><td>0</td><td>1</td><td>0</td><td>0</td><td><code>not computer graphics</code></td></tr>
+                <tr><td><strong>Test (5)</strong></td><td><em>"Please buy GPU from our store."</em> (仅命中词表中的 <code>GPU</code>)</td><td>0</td><td><strong>1</strong></td><td>0</td><td>0</td><td><strong>? (待预测)</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>分步概率计算（Slide P.70）</strong>：
+            <br/>• 类别先验概率：$P(\text{computer graphics}) = \frac{3}{4} = 0.75$；
+            <br/>• 词 `GPU` 在全部训练文档中的边缘出现概率：$P(\text{GPU}) = \frac{3}{4} = 0.75$（ID 1, 3, 4 共 3 条含 GPU）；
+            <br/>• 类别条件概率（似然）：$P(\text{GPU} \mid \text{computer graphics}) = \frac{2}{3} \approx 0.66$（在 ID 1, 2, 3 共 3 条图形学文档中，ID 1 和 ID 3 含 GPU）；
+            <br/>• 后验概率：$P(\text{computer graphics} \mid \text{GPU}) = P(\text{GPU} \mid \text{computer graphics}) \times \frac{P(\text{computer graphics})}{P(\text{GPU})} = 0.66 \times \frac{0.75}{0.75} = \mathbf{0.66 > 0.5}$，因此判定第 5 条文本属于 <code>computer graphics</code>！（若测试文本包含多个词，则按公式连乘所有非停用词的条件概率 $\prod P(w_i|c)$ 并比较大小）。</p>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.4 ==================== -->
+      <section id="sec-2-4" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.4 分类器评估方法、混淆矩阵、P-R/ROC 曲线与 Lift 商业分析</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.71 – P.96</span>
+        </div>
+
+        <div class="step-box step-how">
+          <div class="step-label">Step 3 · How — 四大验证集划分方案对比（Slides P.72 – P.78）</div>
+          <p>评估分类器不仅看预测准确率（Accuracy），还要综合考量效率（Efficiency）、鲁棒性（Robustness）、可扩展性（Scalability）、可解释性（Interpretability）和模型紧凑度（Compactness）（<strong>Slide P.72</strong>）。为了无偏地估计模型在未知数据上的准确率，决不能用训练集做测试！<strong>Slides P.73–78</strong> 介绍了四种标准划分方法：</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>评估划分方法</th>
+                  <th>操作机制 (Slides P.73–78)</th>
+                  <th>适用场景与优缺点</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>留出法 (Holdout Set, P.73)</strong></td>
+                  <td>将数据集 $D$ 划分为互斥的两部分：训练集 $D_{train}$ 和测试集 $D_{test}$（又称 Holdout Set）。</td>
+                  <td>适用于<strong>数据集 $D$ 很大</strong>时；单次划分速度快，但若数据较少则结果受划分随机性影响大。</td>
+                </tr>
+                <tr>
+                  <td><strong>$n$ 折交叉验证 ($n$-fold CV, P.74–75)</strong></td>
+                  <td>将 $D$ 均分为 $n$ 个互斥子集 $D_1, \dots, D_n$（常取 $n=10$ 或 $5$）。每次取 $1$ 个子集作测试集，其余 $n-1$ 个合并作训练集，重复 $n$ 次取平均准确率。</td>
+                  <td>适用于<strong>数据量中等或偏小</strong>时；充分利用所有样本进行训练与测试，结果稳健。</td>
+                </tr>
+                <tr>
+                  <td><strong>留一法 (LOOCV, P.76)</strong></td>
+                  <td>若共有 $m$ 个样本，令 $n=m$ 的交叉验证：每次只留 $1$ 个样本作测试，其余 $m-1$ 个全部用来训练，共训练 $m$ 个模型。</td>
+                  <td>适用于<strong>数据集极小</strong>时；几乎无偏，但训练 $m$ 次计算开销极大。</td>
+                </tr>
+                <tr>
+                  <td><strong>训练集 + 验证集 + 测试集 (Validation Set, P.77–78)</strong></td>
+                  <td>将 $D$ 划分为三份：训练集学参数 $\theta$，<strong>验证集（Validation Set）</strong>调超参数与控制<strong>早停（Early Stop）</strong>，测试集最终闭卷评估。</td>
+                  <td>严防“在测试集上调参”导致的测试集信息泄露（Data Leakage）。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — 类别不平衡、混淆矩阵、P-R/F1 与 ROC/AUC（Slides P.79 – P.91）</div>
+          <p><strong>为什么 Accuracy 在偏斜数据（Skewed / Imbalanced Data）下会彻底失效？（Slide P.79）</strong> 假设网络入侵检测或金融欺诈数据集中只有 $1\%$ 的入侵（正类 Positive），$99\%$ 是正常流量（负类 Negative）。一个一行代码都不学、永远无脑输出“正常”的废柴分类器，也能拿到 $99\%$ 的 Accuracy，但它漏掉了 $100\%$ 的入侵者！因此我们必须使用<strong>混淆矩阵（Confusion Matrix，Slide P.80–82）</strong>专门度量正类的检出质量：</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>混淆矩阵 (Slide P.80)</th>
+                  <th>预测为正例 (Classified Positive)</th>
+                  <th>预测为负例 (Classified Negative)</th>
+                  <th>行合计 (真实总数)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>真实为正例 (Actual Positive)</strong></td>
+                  <td><strong>TP (True Positive 真正例)</strong></td>
+                  <td><strong>FN (False Negative 假负例 / 漏报)</strong></td>
+                  <td>$TP + FN$（真实正例总数 $P_{actual}$）</td>
+                </tr>
+                <tr>
+                  <td><strong>真实为负例 (Actual Negative)</strong></td>
+                  <td><strong>FP (False Positive 假正例 / 误报)</strong></td>
+                  <td><strong>TN (True Negative 真负例)</strong></td>
+                  <td>$FP + TN$（真实负例总数 $N_{actual}$）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formula-card">
+            <strong>核心评估指标公式全集（Slides P.81 – P.87）</strong>
+            $$\text{Precision (查准率)} \quad p = \frac{TP}{TP + FP}, \qquad \text{Recall (查全率 / 敏感度 Sensitivity / TPR)} \quad r = \text{TPR} = \frac{TP}{TP + FN}$$
+            $$F_1\text{-score (调和平均)} = \frac{2pr}{p + r} = \frac{2}{\frac{1}{p} + \frac{1}{r}}$$
+            $$\text{Specificity (特异度 / 真负例率 TNR)} = \frac{TN}{TN + FP}, \qquad \text{FPR (假正例率)} = \frac{FP}{TN + FP} = 1 - \text{Specificity}$$
+          </div>
+          <ul>
+            <li><strong>Slide P.82 极端混淆矩阵算例</strong>：若 $TP = 1, FN = 99, FP = 0, TN = 1000$，则查准率 $p = \frac{1}{1+0} = 100\%$（只要报了正例就全对），但查全率 $r = \frac{1}{1+99} = 1\%$（100个真坏人漏掉了99个）！此时算术平均 $(100\%+1\%)/2 = 50.5\%$ 依然虚高，而<strong>调和平均数 $F_1 = \frac{2 \times 1 \times 0.01}{1 + 0.01} \approx 1.98\%$</strong> 敏锐地暴露出了短板（<strong>Slide P.84</strong>）。</li>
+            <li><strong>P-R 曲线与截断阈值选择（Slides P.83, P.85）</strong>：将测试样本按预测为正例的概率从高到低排序，逐个把截断点（Cut-off threshold）往后移：
+              <br/>• 若业务更看重<strong>查准率 $P$（如商品推荐 Product Recommendation）</strong>，把截断点设在靠前位置（只推把握最大的前几名）；
+              <br/>• 若业务更看重<strong>查全率 $R$（如逃犯追捕 Fugitive Search / 癌症筛查）</strong>，宁可错查不可放过，把截断点设在靠后位置。
+              <br/>• 在 P-R 图（横轴 $R$，纵轴 $P$）中，若学习器 A 的曲线完全包住 C，则 A 优于 C；若 A 与 B 交叉，则比较曲线与对角线 $P=R$ 的交点——<strong>平衡点（Break-Even Point, BEP，Slide P.83）</strong>或 $F_1$ 值。</li>
+            <li><strong>ROC 曲线与 AUC（Slides P.86 – P.91）</strong>：以 $\text{FPR}$ 为横轴、$\text{TPR}$ 为纵轴绘制的曲线即为<strong>受试者工作特征曲线（ROC Curve）</strong>。曲线下面积<strong>AUC（Area Under the Curve，Slide P.89）</strong>：完美分类器 $\text{AUC} = 1$（经过左上角 $(0,1)$ 点），随机猜测对角线 $\text{AUC} = 0.5$。</li>
+          </ul>
+        </div>
+
+        <div class="step-box step-example">
+          <div class="step-label">Step 5 · Example 1 — 原课件 P.91 必考题：10 样本手工绘制有限样本阶梯状 ROC 曲线</div>
+          <p><strong>原课件 P.91 数据表</strong>：共 $10$ 个测试样本（其中真实正例 $P=4$ 个，真实负例 $N=6$ 个），按分类器预测正类概率从高到低排序（Rank $1 \to 10$）的真实标签依次为：<code>+ , + , - , - , + , - , - , + , - , -</code>。</p>
+          <p><strong>手工绘图规律总结</strong>：从原点 $(0,0)$ 出发，依次把第 $k$ 名样本划入预测正例：
+            <br/>• 若当前样本真实为 <strong>正例 <code>+</code></strong>，则 $TP$ 加 $1$，$\text{TPR}$ 向上增加 $\frac{1}{P} = \frac{1}{4} = 0.25$（<strong>垂直向上画一格</strong>）；
+            <br/>• 若当前样本真实为 <strong>负例 <code>-</code></strong>，则 $FP$ 加 $1$，$\text{FPR}$ 向右增加 $\frac{1}{N} = \frac{1}{6} \approx 0.167$（<strong>水平向右画一格</strong>）！</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th><th>初始</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Actual class</strong></td><td>-</td><td><strong>+</strong></td><td><strong>+</strong></td><td>-</td><td>-</td><td><strong>+</strong></td><td>-</td><td>-</td><td><strong>+</strong></td><td>-</td><td>-</td></tr>
+                <tr><td><strong>TP</strong></td><td>0</td><td>1</td><td>2</td><td>2</td><td>2</td><td>3</td><td>3</td><td>3</td><td>4</td><td>4</td><td>4</td></tr>
+                <tr><td><strong>FP</strong></td><td>0</td><td>0</td><td>0</td><td>1</td><td>2</td><td>2</td><td>3</td><td>4</td><td>4</td><td>5</td><td>6</td></tr>
+                <tr><td><strong>TN</strong></td><td>6</td><td>6</td><td>6</td><td>5</td><td>4</td><td>4</td><td>3</td><td>2</td><td>2</td><td>1</td><td>0</td></tr>
+                <tr><td><strong>FN</strong></td><td>4</td><td>3</td><td>2</td><td>2</td><td>2</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td><strong>TPR ($TP/4$)</strong></td><td>0</td><td>0.25</td><td>0.50</td><td>0.50</td><td>0.50</td><td>0.75</td><td>0.75</td><td>0.75</td><td>1.00</td><td>1.00</td><td>1.00</td></tr>
+                <tr><td><strong>FPR ($FP/6$)</strong></td><td>0</td><td>0</td><td>0</td><td>0.17</td><td>0.33</td><td>0.33</td><td>0.50</td><td>0.67</td><td>0.67</td><td>0.83</td><td>1.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>直接计算该 ROC 曲线下的面积 AUC</strong>：把横轴 $[0, 1]$ 按 $6$ 个负例分为 $6$ 个宽为 $\frac{1}{6}$ 的矩形条，高度分别为 $0.5, 0.5, 0.75, 0.75, 1.0, 1.0$，故 $\text{AUC} = \frac{1}{6}\times(0.5 + 0.5 + 0.75 + 0.75 + 1.0 + 1.0) = \frac{4.5}{6} = 0.75$！</p>
+        </div>
+
+        <div class="step-box step-example">
+          <div class="step-label">Step 5 · Example 2 — 原课件 P.92–96 评分排序与 Lift 提升商业利润分析（促销手表完整 10-Bin 算例）</div>
+          <p><strong>商业背景（Slides P.94–95）</strong>：某公司向潜在客户邮寄手表促销包。每寄出一封宣传包成本（材料+邮费）为 $\$0.50$；若客户购买手表，每块表带来 $\$5.00$ 收益（净赚 $\$5.00 - \$0.50 = \$4.50$，或按课件简化口径“总收益 $5 \times \text{正例数} - \text{总邮寄成本}$”）。测试集共有 $10,000$ 名客户，其中真实买家（Positive cases）共 $500$ 人（随机寄信的自然命中率为 $500/10000 = 5\%$）。若盲目给全部 $10,000$ 人寄信：总邮寄成本 $10,000 \times \$0.50 = \$5,000$，总收益 $500 \times \$5.00 = \$2,500$，<strong>净亏损 $\$2,500$</strong>！</p>
+          <p><strong>分箱（Binning）与 Lift 提升曲线计算（Slides P.93, P.95–96）</strong>：用分类器（如决策树叶节点置信度或逻辑回归概率 PE）对 $10,000$ 人从高到低排序，均分为 $10$ 个 Bin（每个 Bin 含 $1,000$ 人，邮寄成本恒为 $1000 \times \$0.50 = \$500$，因此<strong>单箱盈亏平衡点为 $\$500 / \$5.00 = 100$ 个正例</strong>）：</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>分箱 Bin (各 1000 人)</th>
+                  <th>Bin 1</th><th>Bin 2</th><th>Bin 3</th><th>Bin 4</th><th>Bin 5</th><th>Bin 6</th><th>Bin 7</th><th>Bin 8</th><th>Bin 9</th><th>Bin 10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>当箱正例数 (P.95–96)</strong></td><td><strong>210</strong></td><td><strong>120</strong></td><td>60</td><td>40</td><td>22</td><td>18</td><td>12</td><td>8</td><td>5</td><td>5</td></tr>
+                <tr><td><strong>当箱正例占总正例比</strong></td><td>42.0%</td><td>24.0%</td><td>12.0%</td><td>8.0%</td><td>4.4%</td><td>3.6%</td><td>2.4%</td><td>1.6%</td><td>1.0%</td><td>1.0%</td></tr>
+                <tr><td><strong>累计正例捕获率 (Gain / Recall)</strong></td><td><strong>42.0%</strong></td><td><strong>66.0%</strong></td><td>78.0%</td><td>86.0%</td><td>90.4%</td><td>94.0%</td><td>96.4%</td><td>98.0%</td><td>99.0%</td><td>100.0%</td></tr>
+                <tr><td><strong>累计样本占比 (% of Total)</strong></td><td>10%</td><td>20%</td><td>30%</td><td>40%</td><td>50%</td><td>60%</td><td>70%</td><td>80%</td><td>90%</td><td>100%</td></tr>
+                <tr><td><strong>累计提升度 Lift = 累计捕获率 / 样本占比</strong></td><td><strong>4.20</strong></td><td><strong>3.30</strong></td><td>2.60</td><td>2.15</td><td>1.81</td><td>1.57</td><td>1.38</td><td>1.23</td><td>1.10</td><td>1.00</td></tr>
+                <tr><td><strong>当箱净利 ($5×正例 - $500)</strong></td><td style="color:#059669;font-weight:700;">+$550</td><td style="color:#059669;font-weight:700;">+$100</td><td style="color:#dc2626;">-$200</td><td style="color:#dc2626;">-$300</td><td style="color:#dc2626;">-$390</td><td style="color:#dc2626;">-$410</td><td style="color:#dc2626;">-$440</td><td style="color:#dc2626;">-$460</td><td style="color:#dc2626;">-$475</td><td style="color:#dc2626;">-$475</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>最终最优商业决策</strong>：只有 <strong>Bin 1（210 人 &gt; 100）</strong> 和 <strong>Bin 2（120 人 &gt; 100）</strong> 的正例数超过盈亏平衡线！从 Bin 3（60 人）开始寄信即亏损。因此我们应当<strong>仅向排名前 20%（Bin 1 + Bin 2 共 2,000 人）寄送促销包</strong>，以 20% 的成本捕获了 66%（330 人）的买家，斩获最大总净利润 $\$550 + \$100 = \mathbf{\$650}$！</p>
+        </div>
+
+        <!-- Interactive Lab 2.3: ROC & Confusion Matrix Threshold Explorer -->
+        <div class="interactive-lab">
+          <div class="lab-header">
+            <div class="lab-title">🎛️ 交互式实验室 2.3：原课件 P.91 10样本排序截断与 ROC 曲线逐步绘制器</div>
+            <span class="slide-badge">Interactive ROC Plotter</span>
+          </div>
+          <p style="font-size:0.88rem;">拖动下方滑块改变截断位置 $k \in [0, 10]$（将前 $k$ 个样本预测为正类），实时观察混淆矩阵 $(TP, FP, TN, FN)$、$(FPR, TPR)$ 坐标点在阶梯 ROC 曲线上的移动及 $F_1$ 分数变化：</p>
+          <div class="lab-controls">
+            <div class="control-group">
+              <label><span>截断排名阈值 Top-$k$ 预测为正例</span><span id="roc-k-val">2</span></label>
+              <input type="range" id="roc-k" min="0" max="10" step="1" value="2" />
+            </div>
+          </div>
+          <div class="lab-canvas-wrap">
+            <canvas id="roc-canvas" class="lab-canvas" width="760" height="280"></canvas>
+          </div>
+          <div class="lab-stats">
+            <div class="stat-card"><div class="stat-label">混淆矩阵 (TP / FP / TN / FN)</div><div class="stat-val" id="roc-cm">2 / 0 / 6 / 2</div></div>
+            <div class="stat-card"><div class="stat-label">当前 (FPR, TPR)</div><div class="stat-val" id="roc-pt">(0.00, 0.50)</div></div>
+            <div class="stat-card"><div class="stat-label">Precision / Recall / F1</div><div class="stat-val" id="roc-f1">1.00 / 0.50 / 0.67</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.6 ==================== -->
+      <section id="sec-2-6" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.6 偏差-方差分解、机器学习四大定理与 PAC 学习理论</h2>
+          <span class="slide-badge">2-Statistical Learning.pptx · P.107 – P.118</span>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — 偏差-方差分解（Bias-Variance Decomposition，Slides P.109 – P.112）零跳步推导</div>
+          <p>设真实最优回归模型为条件期望 $f^*(\mathbf{x}) = \mathbb{E}_{y\sim p_r(y|\mathbf{x})}[y]$，样本本身固有的不可约噪声方差为 $\epsilon = \mathbb{E}_{(\mathbf{x},y)}[(y - f^*(\mathbf{x}))^2]$（由数据采集噪声引起，任何模型都无法消除，<strong>Slide P.109</strong>）。</p>
+          <p>因为训练集 $\mathcal{D}$ 是从总体分布中随机采样得到的，不同的训练集 $\mathcal{D}$ 会训练出不同的模型 $f_{\mathcal{D}}(\mathbf{x})$。我们对所有可能的训练集 $\mathcal{D}$ 求期望，运用“<strong>加一项减一项 $\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})]$</strong>”的经典代数技巧（<strong>Slide P.110</strong>）：</p>
+          $$\begin{aligned}
+          \mathbb{E}_{\mathcal{D}}\left[\left(f_{\mathcal{D}}(\mathbf{x}) - f^*(\mathbf{x})\right)^2\right] &= \mathbb{E}_{\mathcal{D}}\left[\left(\big(f_{\mathcal{D}}(\mathbf{x}) - \mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})]\big) + \big(\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})] - f^*(\mathbf{x})\big)\right)^2\right] \\
+          &= \underbrace{\left(\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})] - f^*(\mathbf{x})\right)^2}_{(\text{bias})^2 \text{ 偏差平方}} + \underbrace{\mathbb{E}_{\mathcal{D}}\left[\left(f_{\mathcal{D}}(\mathbf{x}) - \mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})]\right)^2\right]}_{\text{variance 方差}}
+          \end{aligned}$$
+          <p><em>【补充证明】为什么展开平方后的交叉项等于 $0$？</em> 因为 $(\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})] - f^*(\mathbf{x}))$ 对于期望算子 $\mathbb{E}_{\mathcal{D}}$ 而言是常数，可以提到期望号外面，而 $\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x}) - \mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})]] = \mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})] - \mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})] = 0$！因此总期望泛化误差分解为（<strong>Slide P.111</strong>）：</p>
+          $$\mathcal{R}(f) = (\text{bias})^2 + \text{variance} + \varepsilon$$
+          <ul>
+            <li><strong>偏差（Bias）</strong>：不同训练集学出的平均模型 $\mathbb{E}_{\mathcal{D}}[f_{\mathcal{D}}(\mathbf{x})]$ 与真实最优模型 $f^*(\mathbf{x})$ 的差距（打靶中心偏离靶心），反映模型本身的拟合能力。<strong>模型越简单 $\to$ 偏差越大（欠拟合）</strong>。</li>
+            <li><strong>方差（Variance）</strong>：不同训练集学出的模型 $f_{\mathcal{D}}(\mathbf{x})$ 围绕其平均预测值的离散波动程度（弹孔散乱程度），反映模型对训练数据扰动的敏感度。<strong>模型越复杂 $\to$ 方差越大（过拟合）</strong>。<strong>集成学习（Ensemble Model，Slide P.112）</strong>是降低方差的有效手段！</li>
+          </ul>
+        </div>
+
+        <div class="step-box step-intuition">
+          <div class="step-label">Step 2 · Intuition — 机器学习四大哲学定理与归纳偏置（Slides P.113 – P.116）</div>
+          <div class="grid-2">
+            <div class="info-card">
+              <h4>1. 没有免费午餐定理 (No Free Lunch, NFL, P.113)</h4>
+              <p>在有限搜索空间中，<strong>不存在对所有问题都普适最优的算法</strong>！如果某个算法在部分问题上比纯随机搜索表现更好，那么它在另一些问题上必然比纯随机搜索更差。脱离具体数据分布空谈“哪个算法天下第一”毫无意义。</p>
+            </div>
+            <div class="info-card">
+              <h4>2. 丑小鸭定理 (Ugly Duckling Theorem, P.114)</h4>
+              <p>如果不引入任何先验特征权重偏置（假设所有逻辑谓词属性地位绝对平等），那么<strong>“丑小鸭与白天鹅共享的属性数量”和“两只白天鹅之间共享的属性数量”完全一样多</strong>！说明没有先验假设就无法进行客观分类或聚类。</p>
+            </div>
+            <div class="info-card">
+              <h4>3. 奥卡姆剃刀原理 (Occam's Razor, P.115)</h4>
+              <p><em>“如无必要，勿增实体（If it is not necessary, do not add entities）。”</em> 当多个假设与观测数据同样一致时，<strong>选择最简单的那个模型</strong>（这正是正则化与结构风险最小化的哲学源头）。</p>
+            </div>
+            <div class="info-card">
+              <h4>4. 归纳偏置 (Inductive Bias, P.116)</h4>
+              <p>学习算法对目标函数所做的先验假设称为<strong>归纳偏置</strong>（在贝叶斯学习中即对应<strong>先验 Prior</strong>）：
+                <br/>• <strong>KNN 最近邻</strong>：假设特征空间局部小区域内的样本属于同一类别；
+                <br/>• <strong>朴素贝叶斯</strong>：假设给定类别下各特征条件独立；
+                <br/>• <strong>线性回归/岭回归</strong>：假设关系线性且参数范数较小。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">Step 4 · Mathematics — PAC 学习理论与样本复杂度推导（Slides P.117 – P.118）</div>
+          <p><strong>PAC（Probably Approximately Correct，概率近似正确，Slide P.117）</strong>回答了一个核心理论问题：<em>我到底需要收集多少个训练样本 $n$，才能以至少 $1-\delta$ 的高概率（Probably），保证学出的模型泛化误差不超过 $\epsilon$（Approximately Correct）？</em></p>
+          $$P\left(\left(\mathcal{R}(f) - \mathcal{R}_{\mathcal{D}}^{emp}(f)\right) \le \epsilon\right) \ge 1 - \delta \qquad (0 < \epsilon < 0.5, \; 0 < \delta < 0.5)$$
+          <div class="formula-card">
+            <strong>有限假设空间 $|\mathcal{F}|$ 的样本复杂度下界（Sample Complexity，Slide P.118）</strong>
+            $$n(\epsilon, \delta) \ge \frac{1}{2\epsilon^2}\left(\ln |\mathcal{F}| + \ln \frac{2}{\delta}\right)$$
+            <div class="var-list">
+              <div class="var-item"><span class="var-sym">$\epsilon$</span><span>允许的最大近似误差容忍度（要求 $\epsilon$ 越小，所需样本 $n$ 按 $1/\epsilon^2$ 平方级暴增！）</span></div>
+              <div class="var-item"><span class="var-sym">$\delta$</span><span>失败概率上限（置信度为 $1-\delta$）</span></div>
+              <div class="var-item"><span class="var-sym">$|\mathcal{F}|$</span><span>假设空间大小（连续无限空间可用 VC 维或 Rademacher 复杂度衡量）</span></div>
+            </div>
+          </div>
+          <details class="collapsible">
+            <summary>🔍 【补充深化】展开查看：如何用 Hoeffding 不等式 3 步推导出样本复杂度公式？</summary>
+            <div class="collapsible-body">
+              <ol>
+                <li><strong>单假设 Hoeffding 界</strong>：对任意固定假设 $f \in \mathcal{F}$，经验风险是 $n$ 个 $[0,1]$ 有界独立随机变量的均值，由双侧 Hoeffding 不等式得 $P(|\mathcal{R}(f) - \mathcal{R}_{\mathcal{D}}^{emp}(f)| > \epsilon) \le 2\exp(-2n\epsilon^2)$。</li>
+                <li><strong>对整个假设空间 $\mathcal{F}$ 取一致界（Union Bound）</strong>：假设空间中至少存在一个假设违背 $\epsilon$ 精度的概率不超过 $2|\mathcal{F}|\exp(-2n\epsilon^2)$。</li>
+                <li><strong>令失败概率 $\le \delta$ 反解 $n$</strong>：令 $2|\mathcal{F}|\exp(-2n\epsilon^2) \le \delta \implies \exp(2n\epsilon^2) \ge \frac{2|\mathcal{F}|}{\delta} \implies 2n\epsilon^2 \ge \ln|\mathcal{F}| + \ln\frac{2}{\delta} \implies n \ge \frac{1}{2\epsilon^2}(\ln|\mathcal{F}| + \ln\frac{2}{\delta})$。证毕！这从数学上严格证明了：<strong>模型的假设空间 $|\mathcal{F}|$ 越复杂，为了不发生过拟合所需要的样本量 $n$ 就越大！</strong></li>
+              </ol>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2.7: PRACTICE PROBLEMS ==================== -->
+      <section id="sec-2-practice" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2.7 Check Understanding：Chapter 2 分层综合练习与详细解析</h2>
+          <span class="slide-badge">Practice &amp; Solutions</span>
+        </div>
+
+        <details class="collapsible">
+          <summary>练习 2.1（基础概念与矩阵求导）：为什么当样本数 $N = 50$、特征维度 $D = 100$ 时，普通最小二乘线性回归无法直接求解？岭回归是如何从代数和贝叶斯两个角度同时解决该问题的？</summary>
+          <div class="collapsible-body">
+            <p><strong>详细解析</strong>：</p>
+            <ul>
+              <li><strong>代数角度（Slide P.24–25）</strong>：在课件约定下，$\mathbf{X} \in \mathbb{R}^{101 \times 50}$，方阵 $\mathbf{X}\mathbf{X}^T \in \mathbb{R}^{101 \times 101}$ 的秩满足 $\text{rank}(\mathbf{X}\mathbf{X}^T) = \text{rank}(\mathbf{X}) \le \min(101, 50) = 50 < 101$。一个 $101$ 阶方阵的秩最多只有 $50$，必定存在至少 $51$ 个零特征值，因此 $\mathbf{X}\mathbf{X}^T$ 奇异不可逆，最小二乘闭式解 $(\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$ 不存在（或正规方程有无穷多解）。岭回归加上 $\lambda\mathbf{I}$ ($\lambda>0$) 后，所有特征值变为 $\mu_i + \lambda \ge \lambda > 0$，使矩阵严格正定可逆。</li>
+              <li><strong>贝叶斯角度（Slide P.102–105）</strong>：当样本量 $N$ 远小于参数量 $D+1$ 时，单靠数据似然无法唯一确定参数；引入高斯先验 $p(\mathbf{w})=\mathcal{N}(\mathbf{0}, \nu^2\mathbf{I})$ 提供了偏好小权重的归纳偏置，使最大后验估计（MAP）有唯一稳定解，且 $\lambda = \sigma^2/\nu^2$。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="collapsible">
+          <summary>练习 2.2（朴素贝叶斯与拉普拉斯平滑计算）：在 2.3 节原课件 P.57 的 10 样本数据集中，若新增一个属性 $D \in \{u, v, w\}$（$S_D = 3$），且在 $C=t$ 的 5 个样本中 $D=u$ 从未出现过（$n_{tu}=0$）。若采用 $\lambda=1$ 的拉普拉斯平滑，求平滑后的 $\Pr(C=t)$ 与 $\Pr(D=u \mid C=t)$。</summary>
+          <div class="collapsible-body">
+            <p><strong>详细解析（对照 Slide P.59 公式）</strong>：</p>
+            <ul>
+              <li>已知总样本数 $N = 10$，类别数 $K = 2$（$t$ 和 $f$），$n_t = 5$，$\lambda = 1$：
+                $$\Pr(C = t) = \frac{n_t + \lambda}{N + \lambda K} = \frac{5 + 1}{10 + 1 \times 2} = \frac{6}{12} = 0.5$$
+              </li>
+              <li>属性 $D$ 可能取值个数 $S_D = 3$，$n_{tu} = 0$，$n_t = 5$：
+                $$\Pr(D = u \mid C = t) = \frac{n_{tu} + \lambda}{n_t + \lambda S_D} = \frac{0 + 1}{5 + 1 \times 3} = \frac{1}{8} = 0.125$$
+                平滑后成功避免了条件概率为 $0$ 导致的乘积归零！
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="collapsible">
+          <summary>练习 2.3（PAC 样本复杂度计算）：设有限假设空间 $|\mathcal{F}| = 1000$，我们希望以至少 $95\%$ 的置信度（即 $1-\delta = 0.95$）保证学得的分类器泛化误差 $\mathcal{R}(f) - \mathcal{R}_{\mathcal{D}}^{emp}(f) \le 0.05$。根据 Slide P.118 公式，至少需要多少个训练样本？（已知 $\ln 1000 \approx 6.91, \ln 40 \approx 3.69$）</summary>
+          <div class="collapsible-body">
+            <p><strong>详细解析</strong>：</p>
+            <p>由题意，$\epsilon = 0.05$，$\delta = 1 - 0.95 = 0.05 \implies \frac{2}{\delta} = \frac{2}{0.05} = 40$，$|\mathcal{F}| = 1000$。代入 Slide P.118 样本复杂度下界公式：</p>
+            $$n(\epsilon, \delta) \ge \frac{1}{2\epsilon^2}\left(\ln |\mathcal{F}| + \ln \frac{2}{\delta}\right) = \frac{1}{2 \times (0.05)^2}\left(\ln 1000 + \ln 40\right) = \frac{1}{0.005}\left(6.91 + 3.69\right) = 200 \times 10.60 = 2120$$
+            <p>因此，至少需要采集 <strong>$2120$</strong> 个独立同分布的训练样本。</p>
+          </div>
+        </details>
+
+        <div class="chapter-footer-nav">
+          <a href="index.html" class="nav-card">
+            <div class="nav-card-dir">&larr; 返回总目录</div>
+            <div class="nav-card-title">0. 课程总览、公式速查与覆盖检查表</div>
+          </a>
+          <a href="chapter3-supervised-learning.html" class="nav-card" style="text-align:right;">
+            <div class="nav-card-dir">下一卷 (Volume II) &rarr;</div>
+            <div class="nav-card-title">Ch3. 监督学习：逻辑回归、SVM 与集成学习</div>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Theme & UI controls
+      const savedTheme = localStorage.getItem("ml-textbook-theme") || "light";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      const themeBtn = document.getElementById("theme-toggle");
+      if (themeBtn) {
+        themeBtn.textContent = savedTheme === "dark" ? "☀️ 浅色模式" : "🌙 深色模式";
+        themeBtn.addEventListener("click", () => {
+          const cur = document.documentElement.getAttribute("data-theme") || "light";
+          const next = cur === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          localStorage.setItem("ml-textbook-theme", next);
+          themeBtn.textContent = next === "dark" ? "☀️ 浅色模式" : "🌙 深色模式";
+        });
+      }
+      const expandBtn = document.getElementById("expand-all-btn");
+      if (expandBtn) {
+        let open = false;
+        expandBtn.addEventListener("click", () => {
+          open = !open;
+          document.querySelectorAll("details.collapsible").forEach(d => d.open = open);
+          expandBtn.textContent = open ? "📕 收起全部推导与解析" : "📖 展开全部推导与解析";
+        });
+      }
+      window.addEventListener("scroll", () => {
+        const bar = document.getElementById("progress-bar");
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar && h > 0) bar.style.width = Math.min(100, (window.scrollY / h) * 100) + "%";
+      });
+
+      // Lab 2.1: Gradient Descent & SGD Simulator
+      const gdCanvas = document.getElementById("gd-canvas");
+      const gdLr = document.getElementById("gd-lr");
+      const gdNoise = document.getElementById("gd-noise");
+      const gdReset = document.getElementById("gd-reset-btn");
+      function drawGD() {
+        if (!gdCanvas) return;
+        const ctx = gdCanvas.getContext("2d");
+        const lr = parseFloat(gdLr.value);
+        const noise = parseFloat(gdNoise.value);
+        document.getElementById("gd-lr-val").textContent = lr.toFixed(2);
+        document.getElementById("gd-noise-val").textContent = noise.toFixed(2);
+
+        ctx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
+        // Left panel: 1D parabola f(x) = x^2
+        ctx.save();
+        ctx.translate(190, 250);
+        ctx.strokeStyle = "#cbd5e1";
+        ctx.beginPath(); ctx.moveTo(-160, 0); ctx.lineTo(160, 0); ctx.moveTo(0, 10); ctx.lineTo(0, -220); ctx.stroke();
+        ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let px = -140; px <= 140; px += 2) {
+          const x = px / 45;
+          const y = -(x * x) * 22;
+          if (px === -140) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+        }
+        ctx.stroke();
+        ctx.fillStyle = "#334155"; ctx.font = "bold 12px sans-serif";
+        ctx.fillText("1D: J(θ) = θ² (Slide P.12)", -70, -225);
+
+        let x1 = -2.6;
+        ctx.strokeStyle = "#dc2626"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i <= 14; i++) {
+          const px = x1 * 45;
+          const py = -Math.min(235, x1 * x1 * 22);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          ctx.fillStyle = i === 0 ? "#059669" : "#dc2626";
+          ctx.fillRect(px - 3, py - 3, 6, 6);
+          const grad = 2 * x1 + (Math.random() - 0.5) * noise * 2.5;
+          x1 = x1 - lr * grad;
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Right panel: 2D contour z = x^2 + 2y^2 (Slide P.11)
+        ctx.save();
+        ctx.translate(560, 155);
+        for (let c = 1; c <= 7; c++) {
+          const r = c * 22;
+          ctx.strokeStyle = "rgba(220, 38, 38, 0.28)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r * 1.25, r * 0.88, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#334155"; ctx.font = "bold 12px sans-serif";
+        ctx.fillText("2D 等高线: z = x² + 2y² (Slide P.11 & P.14)", -125, -130);
+
+        let cx = -2.6, cy = 2.6;
+        ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        for (let i = 0; i <= 15; i++) {
+          const px = cx * 45, py = -cy * 38;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          ctx.fillStyle = i === 0 ? "#059669" : "#1d4ed8";
+          ctx.beginPath(); ctx.arc(px, py, 3.5, 0, Math.PI * 2); ctx.fill();
+          const gx = 2 * cx + (Math.random() - 0.5) * noise * 4;
+          const gy = 4 * cy + (Math.random() - 0.5) * noise * 4;
+          cx -= lr * 0.55 * gx;
+          cy -= lr * 0.55 * gy;
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        const finalLoss = cx * cx + 2 * cy * cy;
+        document.getElementById("gd-final-loss").textContent = finalLoss > 999 ? "发散 (∞)" : finalLoss.toFixed(4);
+        const statusEl = document.getElementById("gd-status");
+        if (lr < 0.08) { statusEl.textContent = "步长过小 (收敛缓慢)"; statusEl.style.color = "#d97706"; }
+        else if (lr <= 0.45) { statusEl.textContent = noise > 0.2 ? "SGD 锯齿收敛" : "理想快速收敛 (Just Right)"; statusEl.style.color = "#059669"; }
+        else if (lr < 0.85) { statusEl.textContent = "步长偏大 (谷底震荡)"; statusEl.style.color = "#d97706"; }
+        else { statusEl.textContent = "步长过大 (发散爆炸!)"; statusEl.style.color = "#dc2626"; }
+      }
+      if (gdLr) {
+        gdLr.addEventListener("input", drawGD);
+        gdNoise.addEventListener("input", drawGD);
+        gdReset.addEventListener("click", drawGD);
+        drawGD();
+      }
+
+      // Lab 2.2: Polynomial Curve Fitting & Ridge Regularization
+      const polyCanvas = document.getElementById("poly-canvas");
+      const polyM = document.getElementById("poly-m");
+      const polyLam = document.getElementById("poly-lam");
+      const polyN = document.getElementById("poly-n");
+      function solveRidge(xs, ys, M, lam) {
+        const dim = M + 1;
+        const A = Array.from({ length: dim }, () => Array(dim).fill(0));
+        const b = Array(dim).fill(0);
+        for (let i = 0; i < xs.length; i++) {
+          const phi = Array.from({ length: dim }, (_, j) => Math.pow(xs[i], j));
+          for (let r = 0; r < dim; r++) {
+            b[r] += phi[r] * ys[i];
+            for (let c = 0; c < dim; c++) A[r][c] += phi[r] * phi[c];
+          }
+        }
+        for (let r = 1; r < dim; r++) A[r][r] += lam;
+        A[0][0] += 1e-10;
+        // Gaussian elimination
+        for (let i = 0; i < dim; i++) {
+          let maxRow = i;
+          for (let k = i + 1; k < dim; k++) if (Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) maxRow = k;
+          [A[i], A[maxRow]] = [A[maxRow], A[i]];
+          [b[i], b[maxRow]] = [b[maxRow], b[i]];
+          const pivot = A[i][i] || 1e-12;
+          for (let k = i + 1; k < dim; k++) {
+            const f = A[k][i] / pivot;
+            b[k] -= f * b[i];
+            for (let j = i; j < dim; j++) A[k][j] -= f * A[i][j];
+          }
+        }
+        const w = Array(dim).fill(0);
+        for (let i = dim - 1; i >= 0; i--) {
+          let s = b[i];
+          for (let j = i + 1; j < dim; j++) s -= A[i][j] * w[j];
+          w[i] = s / (A[i][i] || 1e-12);
+        }
+        return w;
+      }
+      function drawPoly() {
+        if (!polyCanvas) return;
+        const ctx = polyCanvas.getContext("2d");
+        const M = parseInt(polyM.value, 10);
+        const lnLam = parseFloat(polyLam.value);
+        const N = parseInt(polyN.value, 10);
+        const lam = lnLam <= -29 ? 1e-11 : Math.exp(lnLam);
+        document.getElementById("poly-m-val").textContent = M;
+        document.getElementById("poly-lam-val").textContent = lnLam <= -29 ? "-∞ (无正则)" : lnLam;
+        document.getElementById("poly-n-val").textContent = N;
+
+        const xs = [], ys = [];
+        for (let i = 0; i < N; i++) {
+          const x = i / (N - 1);
+          const noise = Math.sin(i * 12.7 + 1.3) * 0.22;
+          xs.push(x);
+          ys.push(Math.sin(2 * Math.PI * x) + noise);
+        }
+        const w = solveRidge(xs, ys, M, lam);
+        const evalPoly = (x) => w.reduce((acc, wj, j) => acc + wj * Math.pow(x, j), 0);
+
+        ctx.clearRect(0, 0, polyCanvas.width, polyCanvas.height);
+        const padX = 60, padY = 30, W = polyCanvas.width - 120, H = polyCanvas.height - 60;
+        const toX = (x) => padX + x * W;
+        const toY = (y) => padY + H / 2 - y * (H * 0.36);
+
+        ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padX, toY(0)); ctx.lineTo(padX + W, toY(0)); ctx.stroke();
+
+        // True sin(2pi x) in green
+        ctx.strokeStyle = "#10b981"; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let s = 0; s <= 200; s++) {
+          const x = s / 200;
+          const y = Math.sin(2 * Math.PI * x);
+          if (s === 0) ctx.moveTo(toX(x), toY(y)); else ctx.lineTo(toX(x), toY(y));
+        }
+        ctx.stroke();
+
+        // Fitted polynomial in red
+        ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let s = 0; s <= 200; s++) {
+          const x = s / 200;
+          const y = Math.max(-1.8, Math.min(1.8, evalPoly(x)));
+          if (s === 0) ctx.moveTo(toX(x), toY(y)); else ctx.lineTo(toX(x), toY(y));
+        }
+        ctx.stroke();
+
+        // Sample points
+        for (let i = 0; i < N; i++) {
+          ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(toX(xs[i]), toY(ys[i]), 4.5, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        let trainSq = 0;
+        for (let i = 0; i < N; i++) trainSq += Math.pow(evalPoly(xs[i]) - ys[i], 2);
+        let testSq = 0;
+        for (let s = 0; s <= 50; s++) {
+          const tx = s / 50;
+          testSq += Math.pow(evalPoly(tx) - Math.sin(2 * Math.PI * tx), 2);
+        }
+        const maxW = Math.max(...w.map(Math.abs));
+        document.getElementById("poly-train-err").textContent = Math.sqrt(trainSq / N).toFixed(3);
+        document.getElementById("poly-test-err").textContent = Math.sqrt(testSq / 51).toFixed(3);
+        document.getElementById("poly-max-w").textContent = maxW > 9999 ? maxW.toExponential(2) : maxW.toFixed(2);
+      }
+      if (polyM) {
+        polyM.addEventListener("input", drawPoly);
+        polyLam.addEventListener("input", drawPoly);
+        polyN.addEventListener("input", drawPoly);
+        drawPoly();
+      }
+
+      // Lab 2.3: ROC Plotter (Slide P.91)
+      const rocCanvas = document.getElementById("roc-canvas");
+      const rocK = document.getElementById("roc-k");
+      const labels = [1, 1, 0, 0, 1, 0, 0, 1, 0, 0];
+      function drawROC() {
+        if (!rocCanvas) return;
+        const ctx = rocCanvas.getContext("2d");
+        const k = parseInt(rocK.value, 10);
+        document.getElementById("roc-k-val").textContent = k;
+
+        ctx.clearRect(0, 0, rocCanvas.width, rocCanvas.height);
+        const ox = 240, oy = 240, size = 200;
+        // Axes
+        ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1.5;
+        ctx.strokeRect(ox, oy - size, size, size);
+        // Diagonal
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + size, oy - size); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Step ROC curve
+        const pts = [{ fpr: 0, tpr: 0, tp: 0, fp: 0, tn: 6, fn: 4 }];
+        let tp = 0, fp = 0;
+        for (let i = 0; i < 10; i++) {
+          if (labels[i] === 1) tp++; else fp++;
+          pts.push({ fpr: fp / 6, tpr: tp / 4, tp, fp, tn: 6 - fp, fn: 4 - tp });
+        }
+        ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        pts.forEach((p, idx) => {
+          const px = ox + p.fpr * size, py = oy - p.tpr * size;
+          if (idx === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+
+        // Highlight current k
+        const cur = pts[k];
+        const cx = ox + cur.fpr * size, cy = oy - cur.tpr * size;
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath(); ctx.arc(cx, cy, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#334155"; ctx.font = "bold 12px sans-serif";
+        ctx.fillText("FPR (假正例率)", ox + 60, oy + 22);
+        ctx.fillText("TPR", ox - 38, oy - 100);
+        ctx.fillText("AUC = 0.75 (Slide P.91)", ox + 240, oy - 160);
+
+        const prec = cur.tp + cur.fp === 0 ? 1 : cur.tp / (cur.tp + cur.fp);
+        const rec = cur.tpr;
+        const f1 = prec + rec === 0 ? 0 : (2 * prec * rec) / (prec + rec);
+        document.getElementById("roc-cm").textContent = `${cur.tp} / ${cur.fp} / ${cur.tn} / ${cur.fn}`;
+        document.getElementById("roc-pt").textContent = `(${cur.fpr.toFixed(2)}, ${cur.tpr.toFixed(2)})`;
+        document.getElementById("roc-f1").textContent = `${prec.toFixed(2)} / ${rec.toFixed(2)} / ${f1.toFixed(2)}`;
+      }
+      if (rocK) {
+        rocK.addEventListener("input", drawROC);
+        drawROC();
+      }
+
+      // Render math
+      function renderMath() {
+        if (window.renderMathInElement) {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "\\[", right: "\\]", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\\(", right: "\\)", display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      }
+      renderMath();
+      window.addEventListener("load", renderMath);
+    });
+  </script>
+</body>
+</html>

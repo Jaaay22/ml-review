@@ -1,0 +1,34 @@
+/* Shared reading layout for phones, tablets and desktop. */
+main, .main-content, .layout > * { min-width: 0; }
+img, svg, canvas { max-width: 100%; }
+canvas { height: auto; }
+.katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: .3rem 0; }
+.table-wrap, pre { max-width: 100%; -webkit-overflow-scrolling: touch; }
+[id] { scroll-margin-top: 6rem; }
+@media (max-width: 1200px) {
+  .top-nav { position: relative; top: 0; height: auto; min-height: 60px; flex-wrap: wrap; gap: .65rem; padding: .85rem 1rem; }
+  .top-nav .brand { flex-basis: 100%; }
+  .nav-links { flex: 1 1 100%; gap: .3rem; }
+  .nav-controls { flex-wrap: wrap; }
+  .layout { margin-top: 0; }
+  .sidebar { display: none; }
+  .main-content { margin-left: 0; max-width: 1080px; padding: 1.2rem; }
+  div.layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .top-nav .brand { font-size: .95rem; }
+  .nav-links { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); width: 100%; }
+  .nav-links a { display: block; padding: .55rem; font-size: .8rem; }
+  .layout, .main-content { width: 100%; }
+  div.layout { padding: .75rem; gap: .75rem; }
+  .main-content { padding: .75rem; }
+  .hero { padding: 1.25rem; }
+  .hero h1 { font-size: 1.6rem; overflow-wrap: anywhere; }
+  .chapter-section, .section-card { padding: 1rem; }
+  .grid-2, .grid-3, .symbol-grid, .var-list { grid-template-columns: minmax(0,1fr); }
+  .section-title, .section-header h2 { font-size: 1.25rem; }
+  .step-box, .ped-box, .interactive-panel { padding: .85rem; }
+  .control-group { min-width: 0; flex-basis: 100%; }
+  summary { gap: .7rem; flex-wrap: wrap; }
+  .btn-icon, .theme-btn, .btn { min-height: 44px; }
+}

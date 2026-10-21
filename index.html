@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DS4023 Machine Learning 交互式自学教材 — 总览与导航中心</title>
+  <link rel="stylesheet" href="katex.min.css" />
+  <script defer src="katex.min.js"></script>
+  <script defer src="auto-render.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc; --bg-card: #ffffff; --bg-subtle: #f1f5f9;
+      --text: #0f172a; --text-secondary: #334155; --text-muted: #64748b;
+      --border: #e2e8f0; --primary: #2563eb; --primary-light: #eff6ff; --primary-dark: #1d4ed8;
+      --accent: #7c3aed; --accent-light: #f5f3ff; --success: #059669; --success-light: #ecfdf5;
+      --warning: #d97706; --warning-light: #fffbeb; --danger: #dc2626; --danger-light: #fef2f2;
+      --code-bg: #1e293b; --code-text: #f8fafc;
+      --shadow: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.05);
+      --shadow-lg: 0 10px 25px -5px rgba(15,23,42,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --bg-card: #1e293b; --bg-subtle: #0f172a;
+      --text: #f1f5f9; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+      --border: #334155; --primary: #60a5fa; --primary-light: rgba(59,130,246,0.15); --primary-dark: #93c5fd;
+      --accent: #a78bfa; --accent-light: rgba(124,58,237,0.15); --success: #34d399; --success-light: rgba(5,150,105,0.15);
+      --warning: #fbbf24; --warning-light: rgba(217,119,6,0.15); --danger: #f87171; --danger-light: rgba(220,38,38,0.15);
+      --code-bg: #020617; --code-text: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.4); --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.5);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.78; transition: background 0.25s, color 0.25s;
+    }
+    #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: rgba(148,163,184,0.2); z-index: 2000; }
+    #progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899); }
+    .top-nav {
+      position: fixed; top: 4px; left: 0; right: 0; height: 60px; background: var(--bg-card);
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; z-index: 1500; box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.02rem; color: var(--text); text-decoration: none; }
+    .brand-badge { background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600; }
+    .nav-links { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .nav-link { text-decoration: none; color: var(--text-secondary); font-size: 0.86rem; font-weight: 500; padding: 0.38rem 0.75rem; border-radius: 8px; transition: all 0.2s; }
+    .nav-link:hover, .nav-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-controls { display: flex; align-items: center; gap: 0.5rem; }
+    .btn-icon { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--text); padding: 0.38rem 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+    .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+    .layout { display: flex; margin-top: 64px; min-height: calc(100vh - 64px); }
+    .sidebar {
+      width: 290px; background: var(--bg-card); border-right: 1px solid var(--border);
+      position: fixed; top: 64px; bottom: 0; left: 0; overflow-y: auto; padding: 1.3rem 0.9rem; z-index: 1000;
+    }
+    .sidebar-title { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700; margin: 1rem 0 0.5rem; padding-left: 0.5rem; }
+    .sidebar-title:first-child { margin-top: 0; }
+    .toc-list { list-style: none; }
+    .toc-item { margin-bottom: 0.2rem; }
+    .toc-link { display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-secondary); font-size: 0.84rem; padding: 0.4rem 0.55rem; border-radius: 6px; }
+    .toc-link:hover, .toc-link.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .slide-tag { font-size: 0.66rem; background: var(--bg-subtle); color: var(--text-muted); padding: 0.08rem 0.38rem; border-radius: 4px; border: 1px solid var(--border); font-family: monospace; }
+    .main-content { margin-left: 290px; flex: 1; max-width: 1080px; padding: 2rem 2.6rem 5rem; }
+    .hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #3b0764 100%); color: #ffffff !important; padding: 2.5rem 2.4rem; border-radius: 16px; margin-bottom: 2.2rem; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.15); }
+    .hero-eyebrow { display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff !important; border: 1px solid rgba(255,255,255,0.38); padding: 0.28rem 0.85rem; border-radius: 999px; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.85rem; }
+    .hero h1 { font-size: 2.05rem; line-height: 1.25; margin-bottom: 0.75rem; font-weight: 800; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .hero p { color: #f8fafc !important; opacity: 1; font-size: 1.02rem; max-width: 880px; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+    .hero-pill { background: rgba(15,23,42,0.45); border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.75rem; border-radius: 8px; font-size: 0.78rem; color: #e2e8f0; }
+    .chapter-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem 2.2rem; margin-bottom: 2.2rem; box-shadow: var(--shadow); }
+    .section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.9rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+    .section-title { font-size: 1.45rem; font-weight: 800; color: var(--text); }
+    .slide-badge { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 999px; font-family: monospace; }
+    .supplement-badge { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: 6px; }
+    h3 { font-size: 1.2rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 1.02rem; font-weight: 700; margin: 1.1rem 0 0.45rem; color: var(--text); }
+    p { margin-bottom: 0.9rem; color: var(--text-secondary); }
+    ul, ol { margin: 0.5rem 0 1.1rem 1.4rem; color: var(--text-secondary); }
+    li { margin-bottom: 0.38rem; }
+    strong { color: var(--text); font-weight: 600; }
+    .step-box { border-left: 4px solid var(--primary); background: var(--bg-subtle); border-radius: 0 10px 10px 0; padding: 1.1rem 1.35rem; margin: 1.15rem 0; }
+    .step-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; padding: 0.16rem 0.55rem; border-radius: 5px; }
+    .step-why { border-left-color: #2563eb; background: var(--primary-light); } .step-why .step-label { background: #2563eb; color: #fff; }
+    .step-intuition { border-left-color: #7c3aed; background: var(--accent-light); } .step-intuition .step-label { background: #7c3aed; color: #fff; }
+    .step-math { border-left-color: #4f46e5; background: var(--bg-card); border: 1px solid var(--border); border-left: 4px solid #4f46e5; } .step-math .step-label { background: #4f46e5; color: #fff; }
+    .step-example { border-left-color: #059669; background: var(--success-light); } .step-example .step-label { background: #059669; color: #fff; }
+    .step-mistake { border-left-color: #dc2626; background: var(--danger-light); } .step-mistake .step-label { background: #dc2626; color: #fff; }
+    .step-supplement { border-left-color: #d97706; background: var(--warning-light); } .step-supplement .step-label { background: #d97706; color: #fff; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.1rem; margin: 1.1rem 0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.1rem; margin: 1.1rem 0; }
+    .info-card { background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 10px; padding: 1.15rem; }
+    .table-wrap { overflow-x: auto; margin: 1.1rem 0; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--bg-subtle); font-weight: 700; color: var(--text); }
+    details.collapsible { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); margin: 0.95rem 0; overflow: hidden; }
+    details.collapsible summary { padding: 0.8rem 1.1rem; font-weight: 700; cursor: pointer; background: var(--bg-subtle); display: flex; justify-content: space-between; list-style: none; }
+    details.collapsible summary::-webkit-details-marker { display: none; }
+    details.collapsible summary::after { content: "▼ 展开详情"; font-size: 0.75rem; color: var(--primary); }
+    details.collapsible[open] summary::after { content: "▲ 收起"; }
+    details.collapsible .collapsible-body { padding: 1.1rem 1.35rem; border-top: 1px solid var(--border); }
+    .status-ok { color: var(--success); font-weight: 700; }
+    @media (max-width: 960px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.2rem; } }
+  </style>
+  <link rel="stylesheet" href="reading.css">
+</head>
+<body>
+  <div id="progress-container"><div id="progress-bar"></div></div>
+  <header class="top-nav">
+    <a href="index.html" class="brand">
+      <span class="brand-badge">DS4023</span>
+      <span>Machine Learning 交互式自学教材</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link active">0. 总览与速查表</a>
+      <a href="chapter2-statistical-learning.html" class="nav-link">Ch2. 统计学习与回归</a>
+      <a href="chapter3-supervised-learning.html" class="nav-link">Ch3. 监督学习 (LR/SVM/集成)</a>
+      <a href="chapter4-neural-networks.html" class="nav-link">Ch4. 神经网络与反向传播</a>
+    </nav>
+    <div class="nav-controls">
+      <button id="expand-all-btn" class="btn-icon">📖 展开全部推导与解析</button>
+      <button id="theme-toggle" class="btn-icon">🌙 深色模式</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">总览与学习指南</div>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-objectives" class="toc-link">1. 学习目标 (Objectives)</a></li>
+        <li class="toc-item"><a href="#sec-big-picture" class="toc-link">2. 课程知识图谱与重构逻辑</a></li>
+        <li class="toc-item"><a href="#sec-prereq" class="toc-link">3. 必要前置数学工具箱 <span class="slide-tag">补充深化</span></a></li>
+        <li class="toc-item"><a href="#sec-cheatsheet" class="toc-link">4. 核心公式全景速查表</a></li>
+        <li class="toc-item"><a href="#sec-traps" class="toc-link">5. 常见考点与易错点总表</a></li>
+        <li class="toc-item"><a href="#sec-checklist" class="toc-link">6. 课件覆盖检查表 (361页)</a></li>
+      </ul>
+      <div class="sidebar-title">分卷深入学习</div>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="chapter2-statistical-learning.html" class="toc-link">第一卷：统计学习与回归 <span class="slide-tag">Ch2 118页</span></a></li>
+        <li class="toc-item"><a href="chapter3-supervised-learning.html" class="toc-link">第二卷：监督学习核心算法 <span class="slide-tag">Ch3 124页</span></a></li>
+        <li class="toc-item"><a href="chapter4-neural-networks.html" class="toc-link">第三卷：神经网络与BP <span class="slide-tag">Ch4 119页</span></a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <section class="hero">
+        <span class="hero-eyebrow">BNBU Department of Computer Science · DS4023 (2026–2027 Fall)</span>
+        <h1>Machine Learning 交互式深度自学教材</h1>
+        <p>本教材以 DS4023 课程上传的三份核心 Lecture Slides（共 361 页）为严格边界与考纲基准，遵循 <strong>Andrew Ng（吴恩达）“直觉先行、循序渐进、零跳步推导、具体数值算例、交互式可视化”</strong> 的八步教学法重新编写。即使完全脱离原始 PPT，你也可以通过本教材建立起严密、直观且经得起推导检验的机器学习知识体系。</p>
+        <div class="hero-meta">
+          <span class="hero-pill">📚 完整覆盖：Ch2 (118页) + Ch3 (124页) + Ch4 (119页) = 361页</span>
+          <span class="hero-pill">🧮 零跳步数学推导：所有矩阵求导、拉格朗日对偶、BP误差项逐步展开</span>
+          <span class="hero-pill">🎛️ 交互式实验：内置 12 个实时可调参数的算法可视化模拟器</span>
+        </div>
+      </section>
+
+      <!-- 1. Learning Objectives -->
+      <section id="sec-objectives" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">1. Learning Objectives：本套教材要带你掌握什么？</h2>
+          <span class="slide-badge">All Lectures Overview</span>
+        </div>
+        <p>完成本套教材三个分卷的学习后，你将不仅能回答“公式是什么”，更能从底层数学原理回答“为什么要这样设计”以及“在考卷或工程中如何手算与调优”：</p>
+        <div class="grid-3">
+          <div class="info-card">
+            <h4>第一卷：统计学习基础 (Chapter 2)</h4>
+            <ul>
+              <li>用<strong>机器学习四要素</strong>（数据、模型、学习准则、优化算法）统一拆解任意学习算法。</li>
+              <li>熟练使用<strong>分母布局矩阵求导</strong>推导线性回归最小二乘闭式解与岭回归（Ridge Regression）解，并从<strong>极大似然（MLE）与最大后验（MAP）</strong>视角证明经验风险与结构风险的概率本质。</li>
+              <li>掌握概率分布、<strong>逆变换采样（Inverse Transform Sampling）</strong>证明、<strong>朴素贝叶斯（Naïve Bayes）</strong>分类与拉普拉斯平滑手算。</li>
+              <li>精通混淆矩阵、Precision/Recall、$F_1$、P-R曲线、<strong>ROC与AUC手算绘图</strong>、Lift提升分析，以及<strong>偏差-方差分解（Bias-Variance Decomposition）</strong>与 <strong>PAC 样本复杂度</strong>公式。</li>
+            </ul>
+            <p style="margin-top:0.6rem;"><a href="chapter2-statistical-learning.html" style="color:var(--primary);font-weight:700;">👉 进入第一卷学习 &rarr;</a></p>
+          </div>
+          <div class="info-card">
+            <h4>第二卷：监督学习核心算法 (Chapter 3)</h4>
+            <ul>
+              <li>理解为什么分类不能直接用线性回归，掌握 <strong>Logistic 回归</strong> Sigmoid 函数、线性与非线性决策边界、为什么平方损失非凸而<strong>交叉熵损失（Cross-Entropy）</strong>凸，以及梯度更新与 One-vs-All 多分类。</li>
+              <li>彻底攻克 <strong>支持向量机（SVM）</strong>：从几何间隔 $\gamma = \frac{2}{\|\mathbf{w}\|}$ 到硬间隔凸二次规划、拉格朗日对偶、<strong>KKT 条件与支持向量稀疏性</strong>、软间隔松弛变量 $\xi_i$ 与 Hinge Loss、参数 $C$ 的偏差方差权衡。</li>
+              <li>掌握<strong>核技巧（Kernel Trick）</strong>、多项式核与高斯 RBF 核、Mercer 定理及核函数选择指南。</li>
+              <li>掌握<strong>集成学习（Ensemble Learning）</strong>：Voting、Stacking、<strong>Bagging（含 0.632 自助采样极限证明与方差缩减证明）</strong>、随机森林（RF）及 <strong>AdaBoost 完整 10 样本 3 轮手算实例</strong>。</li>
+            </ul>
+            <p style="margin-top:0.6rem;"><a href="chapter3-supervised-learning.html" style="color:var(--primary);font-weight:700;">👉 进入第二卷学习 &rarr;</a></p>
+          </div>
+          <div class="info-card">
+            <h4>第三卷：神经网络与反向传播 (Chapter 4)</h4>
+            <ul>
+              <li>剖析人工神经元与 7 种核心<strong>激活函数（Sigmoid, Tanh, ReLU, Leaky ReLU, ELU, Swish, GELU）</strong>的导数、饱和梯度消失、非零均值 Zig-Zag 振荡与 Dead ReLU 现象。</li>
+              <li>掌握前馈神经网络（FNN）层间矩阵前向传播、<strong>通用近似定理（Universal Approximation Theorem）</strong>及 Softmax + 交叉熵结构风险函数。</li>
+              <li>一步不跳推导<strong>反向传播（BP）误差项递推公式</strong> $\delta^{(l)} = f_l'(\mathbf{z}^{(l)}) \odot ((W^{(l+1)})^T\delta^{(l+1)})$ 与参数梯度 $\delta^{(l)}(\mathbf{a}^{(l-1)})^T$。</li>
+              <li>精通 CS231n 标量与向量/矩阵计算图反向传播、门单元（Add/Mul/Max/Copy）梯度流、雅可比矩阵稀疏性、<strong>自动微分（前向模式 vs 反向模式）</strong>与静态/动态计算图。</li>
+            </ul>
+            <p style="margin-top:0.6rem;"><a href="chapter4-neural-networks.html" style="color:var(--primary);font-weight:700;">👉 进入第三卷学习 &rarr;</a></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Big Picture -->
+      <section id="sec-big-picture" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">2. Big Picture：本课程在机器学习体系中的位置与教学重构</h2>
+          <span class="slide-badge">Curriculum Architecture</span>
+        </div>
+        <div class="step-box step-intuition">
+          <div class="step-label">Intuition · 为什么我们要对原始课件顺序进行微调？</div>
+          <p>在原始课件中，<strong>Chapter 2</strong> 先讲了线性回归（2.1），中间隔了概率分布（2.2）、朴素贝叶斯（2.3）和分类器评估（2.4），到 2.5 才回过头讲线性回归的概率视角（MLE/MAP），2.6 再讲偏差-方差分解；而在 <strong>Chapter 3</strong> 的 3.1 逻辑回归末尾又重复讲了一遍线性回归与逻辑回归的正则化。为了让你在自学时一气呵成，我们在<strong>保留全部原始页码标注</strong>的前提下，按人类认知最顺畅的脉络进行了逻辑串联：</p>
+        </div>
+
+        <!-- SVG Knowledge Dependency Graph -->
+        <div style="margin:1.4rem 0; overflow-x:auto; text-align:center;">
+          <svg viewBox="0 0 960 360" style="max-width:100%; height:auto; background:var(--bg-subtle); border-radius:12px; border:1px solid var(--border); padding:10px;">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563eb" />
+              </marker>
+            </defs>
+            <rect x="20" y="30" width="200" height="85" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+            <text x="120" y="58" text-anchor="middle" font-weight="bold" font-size="14" fill="#1e3a8a">统计学习四要素 (Ch2 P.1-18)</text>
+            <text x="120" y="80" text-anchor="middle" font-size="12" fill="#334155">数据 · 模型 · 风险(ERM/SRM)</text>
+            <text x="120" y="98" text-anchor="middle" font-size="12" fill="#334155">梯度下降 (GD / SGD / Mini-Batch)</text>
+
+            <rect x="20" y="145" width="200" height="85" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+            <text x="120" y="173" text-anchor="middle" font-weight="bold" font-size="14" fill="#1e3a8a">概率与采样基石 (Ch2 P.35-49)</text>
+            <text x="120" y="195" text-anchor="middle" font-size="12" fill="#334155">伯努利 / 二项 / 高斯分布</text>
+            <text x="120" y="213" text-anchor="middle" font-size="12" fill="#334155">条件概率 · 逆变换采样 · 大数定律</text>
+
+            <rect x="20" y="255" width="200" height="80" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+            <text x="120" y="283" text-anchor="middle" font-weight="bold" font-size="14" fill="#1e3a8a">泛化理论与评估 (Ch2 P.71-118)</text>
+            <text x="120" y="303" text-anchor="middle" font-size="12" fill="#334155">混淆矩阵 / P-R / ROC / AUC / Lift</text>
+            <text x="120" y="321" text-anchor="middle" font-size="12" fill="#334155">偏差-方差分解 · NFL · PAC 理论</text>
+
+            <rect x="270" y="30" width="205" height="90" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+            <text x="372" y="56" text-anchor="middle" font-weight="bold" font-size="14" fill="#065f46">线性回归与概率视角</text>
+            <text x="372" y="75" text-anchor="middle" font-size="11.5" fill="#334155">(Ch2 P.19-34, P.97-106)</text>
+            <text x="372" y="94" text-anchor="middle" font-size="12" fill="#334155">最小二乘(ERM) ⇔ 极大似然(MLE)</text>
+            <text x="372" y="111" text-anchor="middle" font-size="12" fill="#334155">岭回归(SRM) ⇔ 最大后验(MAP)</text>
+
+            <rect x="270" y="145" width="205" height="85" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+            <text x="372" y="173" text-anchor="middle" font-weight="bold" font-size="14" fill="#065f46">朴素贝叶斯 (Ch2 P.50-70)</text>
+            <text x="372" y="195" text-anchor="middle" font-size="12" fill="#334155">生成式建模 · 属性条件独立假设</text>
+            <text x="372" y="213" text-anchor="middle" font-size="12" fill="#334155">拉普拉斯平滑 · 词袋文本分类</text>
+
+            <rect x="270" y="255" width="205" height="80" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+            <text x="372" y="281" text-anchor="middle" font-weight="bold" font-size="14" fill="#065f46">逻辑回归 (Ch3.1 P.1-39)</text>
+            <text x="372" y="301" text-anchor="middle" font-size="12" fill="#334155">Sigmoid 概率映射 · 交叉熵凸损失</text>
+            <text x="372" y="319" text-anchor="middle" font-size="12" fill="#334155">线性/多项式边界 · One-vs-All</text>
+
+            <rect x="525" y="30" width="200" height="140" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+            <text x="625" y="58" text-anchor="middle" font-weight="bold" font-size="14" fill="#5b21b6">支持向量机 SVM (Ch3.2-3.3)</text>
+            <text x="625" y="80" text-anchor="middle" font-size="12" fill="#334155">最大几何间隔 · 拉格朗日对偶</text>
+            <text x="625" y="100" text-anchor="middle" font-size="12" fill="#334155">KKT 互补松弛 → 支持向量稀疏性</text>
+            <text x="625" y="120" text-anchor="middle" font-size="12" fill="#334155">软间隔 ξ_i · Hinge Loss · 参数 C</text>
+            <text x="625" y="140" text-anchor="middle" font-size="12" fill="#334155">核技巧 Kernel Trick · Mercer 定理</text>
+
+            <rect x="525" y="195" width="200" height="140" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+            <text x="625" y="223" text-anchor="middle" font-weight="bold" font-size="14" fill="#5b21b6">集成学习 (Ch3.4 P.95-124)</text>
+            <text x="625" y="245" text-anchor="middle" font-size="12" fill="#334155">Voting / Stacking 组合策略</text>
+            <text x="625" y="265" text-anchor="middle" font-size="12" fill="#334155">Bagging (0.632采样 · 降方差)</text>
+            <text x="625" y="285" text-anchor="middle" font-size="12" fill="#334155">随机森林 RF (样本+特征双随机)</text>
+            <text x="625" y="305" text-anchor="middle" font-size="12" fill="#334155">AdaBoost (指数损失 · 降偏差)</text>
+
+            <rect x="770" y="30" width="175" height="305" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+            <text x="857" y="60" text-anchor="middle" font-weight="bold" font-size="14" fill="#92400e">神经网络 (Ch4 P.1-119)</text>
+            <text x="857" y="90" text-anchor="middle" font-size="12" fill="#334155">人工神经元 = 广义线性单元</text>
+            <text x="857" y="115" text-anchor="middle" font-size="12" fill="#334155">7大激活函数与导数分析</text>
+            <text x="857" y="140" text-anchor="middle" font-size="12" fill="#334155">多层前馈网络与通用近似定理</text>
+            <text x="857" y="165" text-anchor="middle" font-size="12" fill="#334155">矩阵微积分与反向传播 (BP)</text>
+            <text x="857" y="190" text-anchor="middle" font-size="12" fill="#334155">计算图门单元与维度对齐</text>
+            <text x="857" y="215" text-anchor="middle" font-size="12" fill="#334155">自动微分 (前向 vs 反向模式)</text>
+            <text x="857" y="240" text-anchor="middle" font-size="12" fill="#334155">静态图 vs 动态图 (PyTorch)</text>
+            <text x="857" y="265" text-anchor="middle" font-size="12" fill="#334155">非凸优化与梯度消失</text>
+
+            <line x1="220" y1="72" x2="266" y2="72" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="220" y1="185" x2="266" y2="100" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="220" y1="185" x2="266" y2="185" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="372" y1="120" x2="372" y2="250" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="475" y1="290" x2="521" y2="110" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="220" y1="295" x2="521" y2="265" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="475" y1="295" x2="766" y2="180" stroke="#d97706" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="725" y1="100" x2="766" y2="140" stroke="#d97706" stroke-width="2" marker-end="url(#arrow)"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 3. Prerequisites -->
+      <section id="sec-prereq" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">3. Prerequisites：必要前置数学工具箱（扫除推导障碍）</h2>
+          <span class="supplement-badge">【补充深化】连接微积分/线代/概率论与本课公式</span>
+        </div>
+        <p>原课件在矩阵求导（Ch2 P.23、Ch4 P.38）、拉格朗日对偶（Ch3.2 P.52–60）和条件独立性（Ch2 P.54）处默认大家熟悉符号约定。这里我们把最容易卡壳的三个数学工具一次性讲透：</p>
+
+        <div class="step-box step-math">
+          <div class="step-label">工具一 · 矩阵微积分的分母布局（Denominator Layout）</div>
+          <p>在本课程（尤其是 Ch2 P.23 与 Ch4 P.38 邱锡鹏《神经网络与深度学习》体系）中，向量对向量的求导统一采用<strong>分母布局（Denominator Layout，又称列向量布局）</strong>：</p>
+          <ul>
+            <li><strong>标量 $y \in \mathbb{R}$ 对列向量 $\mathbf{x} \in \mathbb{R}^p$ 求导</strong>：结果与分母 $\mathbf{x}$ 形状相同，仍是一个 $p \times 1$ 的列向量：
+              $$\frac{\partial y}{\partial \mathbf{x}} = \left[\frac{\partial y}{\partial x_1}, \frac{\partial y}{\partial x_2}, \dots, \frac{\partial y}{\partial x_p}\right]^T \in \mathbb{R}^{p \times 1}$$
+            </li>
+            <li><strong>列向量函数 $\mathbf{y} = f(\mathbf{x}) \in \mathbb{R}^q$ 对列向量 $\mathbf{x} \in \mathbb{R}^p$ 求导</strong>：行索引对应分母 $\mathbf{x}$（共 $p$ 行），列索引对应分子 $\mathbf{y}$（共 $q$ 列），构成 $p \times q$ 矩阵（注意这与高数课常见的 $q \times p$ 雅可比矩阵刚好相差一个转置！）：
+              $$\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = \begin{bmatrix} \frac{\partial y_1}{\partial x_1} & \cdots & \frac{\partial y_q}{\partial x_1} \\ \vdots & \ddots & \vdots \\ \frac{\partial y_1}{\partial x_p} & \cdots & \frac{\partial y_q}{\partial x_p} \end{bmatrix} \in \mathbb{R}^{p \times q}$$
+            </li>
+            <li><strong>三个高频求导恒等式（Ch2 P.23）</strong>：
+              $$\frac{\partial \mathbf{x}}{\partial \mathbf{x}} = \mathbf{I}, \qquad \frac{\partial (\mathbf{A}\mathbf{x})}{\partial \mathbf{x}} = \mathbf{A}^T, \qquad \frac{\partial (\mathbf{x}^T\mathbf{A})}{\partial \mathbf{x}} = \mathbf{A}$$
+              <em>直觉验证</em>：设 $\mathbf{A} \in \mathbb{R}^{q \times p}, \mathbf{x} \in \mathbb{R}^{p \times 1}$，则 $\mathbf{y} = \mathbf{A}\mathbf{x} \in \mathbb{R}^{q \times 1}$。根据分母布局，导数维度必须是 $p \times q$，而 $\mathbf{A}$ 是 $q \times p$，所以必然要转置成 $\mathbf{A}^T \in \mathbb{R}^{p \times q}$！用“<strong>分母决定行数，分子决定列数</strong>”的维度对齐法则，永远不会背错转置符号。
+            </li>
+            <li><strong>分母布局下的链式法则（Ch4 P.39）</strong>：若 $\mathbf{x} \in \mathbb{R}^p \to \mathbf{y} = g(\mathbf{x}) \in \mathbb{R}^s \to \mathbf{z} = f(\mathbf{y}) \in \mathbb{R}^t$，则因为 $\frac{\partial \mathbf{y}}{\partial \mathbf{x}} \in \mathbb{R}^{p \times s}$ 且 $\frac{\partial \mathbf{z}}{\partial \mathbf{y}} \in \mathbb{R}^{s \times t}$，矩阵相乘必须<strong>从左往右写（由近及远）</strong>才能消掉中间维度 $s$：
+              $$\frac{\partial \mathbf{z}}{\partial \mathbf{x}} = \frac{\partial \mathbf{y}}{\partial \mathbf{x}} \cdot \frac{\partial \mathbf{z}}{\partial \mathbf{y}} \in \mathbb{R}^{p \times t}$$
+            </li>
+          </ul>
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">工具二 · 超平面与点到超平面的几何距离（支撑 Ch3 SVM）</div>
+          <p>在 $n$ 维欧氏空间 $\mathbb{R}^n$ 中，超平面 $\mathcal{H} = \{\mathbf{x} \mid \mathbf{w}^T\mathbf{x} + b = 0\}$ 的法向量（Normal Vector）就是权重向量 $\mathbf{w}$。为什么任意点 $\mathbf{x}$ 到超平面 $\mathcal{H}$ 的垂直距离公式是 $d = \frac{|\mathbf{w}^T\mathbf{x}+b|}{\|\mathbf{w}\|}$？</p>
+          <p><strong>3步严谨推导</strong>：设 $\mathbf{x}_0 \in \mathcal{H}$ 是超平面上一点，则 $\mathbf{w}^T\mathbf{x}_0 + b = 0 \implies b = -\mathbf{w}^T\mathbf{x}_0$。从 $\mathbf{x}_0$ 指向 $\mathbf{x}$ 的向量为 $(\mathbf{x} - \mathbf{x}_0)$。点 $\mathbf{x}$ 到超平面的垂直距离 $d$，正是向量 $(\mathbf{x} - \mathbf{x}_0)$ 在单位法向量 $\frac{\mathbf{w}}{\|\mathbf{w}\|}$ 方向上的投影长度：</p>
+          $$d = \left| (\mathbf{x} - \mathbf{x}_0)^T \frac{\mathbf{w}}{\|\mathbf{w}\|} \right| = \frac{|\mathbf{w}^T\mathbf{x} - \mathbf{w}^T\mathbf{x}_0|}{\|\mathbf{w}\|} = \frac{|\mathbf{w}^T\mathbf{x} + b|}{\|\mathbf{w}\|}$$
+        </div>
+
+        <div class="step-box step-math">
+          <div class="step-label">工具三 · 重要极限 $(1 - \frac{1}{m})^m \to e^{-1}$ 与指示函数 $\mathbb{I}(\cdot)$（支撑 Ch3 集成学习）</div>
+          <ul>
+            <li><strong>指示函数（Indicator Function）$\mathbb{I}(\text{condition})$</strong>：当括号内的逻辑命题为真时取值为 $1$，为假时取值为 $0$。例如分类错误率可紧凑写为 $\frac{1}{m}\sum_{i=1}^m \mathbb{I}(h(\mathbf{x}_i) \neq y_i)$。</li>
+            <li><strong>自然常数极限</strong>：微积分基本极限 $\lim_{m \to \infty} \left(1 - \frac{1}{m}\right)^m = \frac{1}{e} \approx 0.368$。这直接解释了为什么 Bagging 有放回抽样 $m$ 次后，约有 $36.8\%$ 的原始样本从未被抽中（Out-of-Bag, OOB），而约 $1 - 0.368 = 63.2\%$ 的样本至少出现一次（Ch3 P.104）。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4. Formula Cheat Sheet -->
+      <section id="sec-cheatsheet" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">4. Formula Cheat Sheet：三章核心公式全景速查表</h2>
+          <span class="slide-badge">Exam Quick Reference</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>所属模块与页码</th>
+                <th>核心概念 / 算法</th>
+                <th>数学公式表达</th>
+                <th>关键符号与物理意义</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ch2 P.8–9, P.16</strong></td>
+                <td>期望风险 vs 经验风险 vs 泛化误差</td>
+                <td>$\mathcal{R}(f) = \mathbb{E}_{(\mathbf{x},y)\sim p_r}[\mathcal{L}(y, f(\mathbf{x}))]$<br/>$\mathcal{R}_{\mathcal{D}}^{emp}(f) = \frac{1}{N}\sum_{n=1}^N \mathcal{L}(y^{(n)}, f(\mathbf{x}^{(n)}))$<br/>$\mathcal{G}_{\mathcal{D}}(f) = \mathcal{R}(f) - \mathcal{R}_{\mathcal{D}}^{emp}(f)$</td>
+                <td>真实分布 $p_r$ 未知，用训练集均值 $\mathcal{R}_{\mathcal{D}}^{emp}$ 近似期望风险 $\mathcal{R}(f)$（大数定律保证 $N\to\infty$ 时收敛）。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch2 P.22–25, P.98–106</strong></td>
+                <td>线性回归最小二乘 (ERM/MLE) 与岭回归 (SRM/MAP)</td>
+                <td>$\mathbf{w}^{ML} = (\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$<br/>$\mathbf{w}^{MAP} = (\mathbf{X}\mathbf{X}^T + \lambda\mathbf{I})^{-1}\mathbf{X}\mathbf{y}$</td>
+                <td>注意课件中 $\mathbf{X} \in \mathbb{R}^{(D+1)\times N}$ 每列为一个样本；在高斯噪声 $\sigma^2$ 与高斯先验 $\nu^2\mathbf{I}$ 下，$\lambda = \sigma^2/\nu^2$。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch2 P.55–59</strong></td>
+                <td>朴素贝叶斯与拉普拉斯平滑</td>
+                <td>$\hat{c} = \arg\max_{c_j} \Pr(c_j)\prod_{i=1}^{|A|}\Pr(A_i=a_i|C=c_j)$<br/>$\Pr(A_i=a_i|C=c_j) = \frac{n_{ij}+\lambda}{n_j + \lambda S_i}$</td>
+                <td>$S_i$ 为属性 $A_i$ 可能的离散取值个数，$K$ 为类别总数；$\lambda=1$ 时即为拉普拉斯平滑，防止单个零频次抹杀整个乘积。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch2 P.80–87</strong></td>
+                <td>分类评估指标 (P, R, $F_1$, TPR, FPR)</td>
+                <td>$p = \frac{TP}{TP+FP}, \quad r = \text{TPR} = \frac{TP}{TP+FN}$<br/>$F_1 = \frac{2pr}{p+r}, \quad \text{FPR} = \frac{FP}{TN+FP} = 1 - \text{TNR}$</td>
+                <td>P-R 曲线以 Recall 为横轴、Precision 为纵轴；ROC 曲线以 FPR 为横轴、TPR 为纵轴，面积为 AUC。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch2 P.109–118</strong></td>
+                <td>偏差-方差分解 &amp; PAC 样本复杂度</td>
+                <td>$\mathcal{R}(f) = (\text{bias})^2 + \text{variance} + \varepsilon$<br/>$n(\epsilon,\delta) \ge \frac{1}{2\epsilon^2}(\ln|\mathcal{F}| + \ln\frac{2}{\delta})$</td>
+                <td>模型越复杂，偏差 $(\text{bias})^2$ 越小，方差 $\text{variance}$ 越大，假设空间 $|\mathcal{F}|$ 越大，所需样本量 $n$ 越多。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch3.1 P.9–21, P.38–39</strong></td>
+                <td>正则化逻辑回归 (Logistic Regression)</td>
+                <td>$h_\theta(\mathbf{x}) = g(\theta^T\mathbf{x}) = \frac{1}{1+e^{-\theta^T\mathbf{x}}}$<br/>$J(\theta) = \frac{1}{m}\sum_{i=1}^m[-y^{(i)}\log h_\theta(\mathbf{x}^{(i)}) - (1-y^{(i)})\log(1-h_\theta(\mathbf{x}^{(i)}))] + \frac{\lambda}{2m}\sum_{j=1}^n \theta_j^2$</td>
+                <td>决策边界为 $\theta^T\mathbf{x}=0$（对应 $h_\theta(\mathbf{x})=0.5$）；注意偏置项 $\theta_0$ <strong>绝不参与正则化惩罚</strong>（求和从 $j=1$ 开始）。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch3.2–3.3 P.51, P.63, P.72, P.75</strong></td>
+                <td>支持向量机 (SVM) 原问题与对偶问题</td>
+                <td>原问题：$\min_{\mathbf{w},b,\xi} \frac{1}{2}\|\mathbf{w}\|^2 + C\sum_{i=1}^m \xi_i \quad \text{s.t. } y_i(\mathbf{w}^T\mathbf{x}_i+b)\ge 1-\xi_i, \xi_i\ge 0$<br/>对偶：$\max_\alpha \sum_{i=1}^m \alpha_i - \frac{1}{2}\sum_{i,j=1}^m \alpha_i\alpha_j y_i y_j \kappa(\mathbf{x}_i,\mathbf{x}_j) \quad \text{s.t. } 0\le \alpha_i\le C, \sum \alpha_i y_i = 0$</td>
+                <td>权重解 $\mathbf{w}^* = \sum_{i=1}^m \alpha_i^* y_i \mathbf{x}_i$；仅支持向量满足 $\alpha_i^* > 0$；满足 $0 < \alpha_j^* < C$ 的样本在间隔边界上，用于求 $b^*$。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch3.4 P.105, P.117, P.123</strong></td>
+                <td>Bagging 与 AdaBoost</td>
+                <td>Bagging: $H(\mathbf{x}) = \arg\max_{y\in\{\pm 1\}}\sum_{t=1}^T \mathbb{I}(y=h_t(\mathbf{x}))$<br/>AdaBoost: $\epsilon_t = \sum_{i=1}^m D_t(i)\mathbb{I}(y_i\neq h_t(\mathbf{x}_i)), \quad \alpha_t = \frac{1}{2}\ln\frac{1-\epsilon_t}{\epsilon_t}$<br/>$D_{t+1}(i) = \frac{D_t(i)}{Z_t}\exp(-\alpha_t y_i h_t(\mathbf{x}_i)), \quad H(\mathbf{x}) = \text{sign}(\sum_{t=1}^T \alpha_t h_t(\mathbf{x}))$</td>
+                <td>Bagging 采样率 $\approx 63.2\%$，并行训练降低方差；AdaBoost 串行调整样本权重最小化指数损失 $\sum \exp(-y_i H(\mathbf{x}_i))$，降低偏差。</td>
+              </tr>
+              <tr>
+                <td><strong>Ch4 P.29–44</strong></td>
+                <td>前馈神经网络 (FNN) 与反向传播 (BP)</td>
+                <td>前向：$\mathbf{z}^{(l)} = \mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}, \quad \mathbf{a}^{(l)} = f_l(\mathbf{z}^{(l)})$<br/>反向误差：$\delta^{(l)} = \frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(l)}} = f_l'(\mathbf{z}^{(l)}) \odot ((\mathbf{W}^{(l+1)})^T\delta^{(l+1)})$<br/>参数梯度：$\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}} = \delta^{(l)}(\mathbf{a}^{(l-1)})^T, \quad \frac{\partial \mathcal{L}}{\partial \mathbf{b}^{(l)}} = \delta^{(l)}$</td>
+                <td>$\odot$ 为逐元素哈达玛积（Hadamard Product）；第 $l$ 层权重矩阵维度 $\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}$。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. Common Exam Traps -->
+      <section id="sec-traps" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">5. Common Exam Traps：期末考试高频陷阱与概念辨析</h2>
+          <span class="slide-badge">8 Must-Know Pitfalls</span>
+        </div>
+        <div class="grid-2">
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 1 · 名字叫“回归”却是分类模型！</div>
+            <p><strong>Logistic Regression（逻辑回归）</strong>和 <strong>Softmax Regression</strong> 虽然名字带有“Regression”，但它们是彻头彻尾的<strong>分类算法（Classification）</strong>！原因在于它们用线性回归的净输入 $\theta^T\mathbf{x}$ 去拟合后验概率的对数几率（Log-odds），最终输出离散类别的条件概率。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 2 · 逻辑回归为什么不用平方误差损失？</div>
+            <p>千万不要只回答“因为输出是 0 和 1”！核心数学原因是：当把非线性的 Sigmoid 函数 $h_\theta(\mathbf{x}) = \frac{1}{1+e^{-\theta^T\mathbf{x}}}$ 代入平方损失 $\frac{1}{2}(h_\theta(\mathbf{x})-y)^2$ 时，目标函数关于参数 $\theta$ 是<strong>非凸的（Non-convex）</strong>，存在大量局部极小值（Ch3 P.16）；而改用对数似然导出的<strong>交叉熵损失（Cross-Entropy）</strong>后，$J(\theta)$ 是严格<strong>凸函数（Convex）</strong>，保证梯度下降能找到全局最优解。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 3 · 正则化惩罚项是否包含偏置 $\theta_0$ / $b$？</div>
+            <p><strong>不包含！</strong>无论是线性回归、逻辑回归（Ch3 P.37–39 求和为 $\sum_{j=1}^n \theta_j^2$）还是神经网络（Ch4 P.35 只对权重矩阵 $\mathbf{W}$ 求 Frobenius 范数 $\|\mathbf{W}\|_F^2$），偏置 $\theta_0$ 或 $\mathbf{b}^{(l)}$ 都只控制函数整体上下平移，不决定函数曲率与复杂度，惩罚偏置反而会导致欠拟合。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 4 · SVM 中参数 $C$ 与正则化系数 $\lambda$ 的方向完全相反！</div>
+            <p>在线性/逻辑回归中，$\min J(\theta) + \lambda\sum \theta_j^2$：$\lambda$ 越大，对参数惩罚越重，模型越简单（易欠拟合）。而在软间隔 SVM 中，$\min \frac{1}{2}\|\mathbf{w}\|^2 + C\sum \xi_i$（等价于 $C \propto \frac{1}{\lambda}$）：<strong>$C$ 越大</strong>，代表对误分类/违例容忍度越低，间隔越窄，<strong>越容易过拟合</strong>；<strong>$C$ 越小</strong>，间隔越宽，允许更多训练误差，<strong>越倾向于欠拟合</strong>（Ch3 P.73）。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 5 · 软间隔 SVM 中 $\xi_i > 0$ 就代表分类错误吗？</div>
+            <p><strong>错！</strong>（Ch3 P.71, P.77–78 必考填空看图题）：
+              <br/>• $\xi_i = 0$：样本在最大间隔边界上或边界外正确一侧；
+              <br/>• $0 < \xi_i < 1$：样本越过了间隔边界（Margin boundary），但<strong>仍在决策超平面 $\mathbf{w}^T\mathbf{x}+b=0$ 的正确一侧（分类依然正确！）</strong>；
+              <br/>• $\xi_i = 1$：样本刚好落在决策超平面 $\mathbf{w}^T\mathbf{x}+b=0$ 上；
+              <br/>• $\xi_i > 1$：样本跨过了决策超平面，<strong>真正发生分类错误（Misclassified）</strong>！</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 6 · 神经网络如果去掉非线性激活函数会怎样？</div>
+            <p>无论堆叠多少层（哪怕 100 层），如果激活函数是线性的 $f(\mathbf{z}) = \mathbf{z}$，则 $\mathbf{W}^{(2)}(\mathbf{W}^{(1)}\mathbf{x}+\mathbf{b}^{(1)})+\mathbf{b}^{(2)} = \tilde{\mathbf{W}}\mathbf{x}+\tilde{\mathbf{b}}$，多层网络会<strong>坍缩等价于单层线性模型</strong>，彻底丧失拟合非线性函数的能力（Ch4 P.7, P.31）。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 7 · 神经网络参数可以全部初始化为 0 吗？</div>
+            <p><strong>绝对不行！</strong>逻辑回归可以把 $\theta$ 初始化为 0；但多层神经网络若把 $\mathbf{W}$ 全初始化为 0（或相同常数），同一层所有隐藏神经元在前向传播时净输入完全相同，反向传播算出的梯度 $\delta_i^{(l)}$ 也完全相同，导致<strong>对称性无法打破（Symmetry Breaking Failure）</strong>，整层几百个神经元退化成 1 个神经元！（注意 Ch4 P.44 算法 4.1 第 1 行明确要求“随机初始化 $\mathbf{W}, \mathbf{b}$”）。</p>
+          </div>
+          <div class="step-box step-mistake">
+            <div class="step-label">陷阱 8 · Bagging 与 Boosting 到底谁降方差、谁降偏差？</div>
+            <p><strong>Bagging（如随机森林）</strong>主要作用在<strong>低偏差、高方差</strong>的强基学习器（如未剪枝深决策树）上，通过自助采样平均<strong>降低方差（Variance）而不改变偏差</strong>（Ch3 P.109–110）；<strong>Boosting（如 AdaBoost）</strong>主要作用在<strong>高偏差、低方差</strong>的弱基学习器（如单层决策树桩 Decision Stump）上，通过串行聚焦错分样本最小化指数损失，显著<strong>降低偏差（Bias）</strong>（Ch3 P.123–124）。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Lecture Coverage Checklist -->
+      <section id="sec-checklist" class="chapter-section">
+        <div class="section-header">
+          <h2 class="section-title">6. Lecture Coverage Checklist：原始课件 361 页完整覆盖核对表</h2>
+          <span class="slide-badge">100% Verified Coverage</span>
+        </div>
+        <p>以下表格逐项列出三份上传课件（`2-Statistical Learning.pptx`、`3-Supervised Learning.pptx`、`4-Neural Networks.pptx`）的全部章节与知识点、原始页码区间、本教材对应分卷章节及完成状态：</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>原始课件文件</th>
+                <th>原课件知识点 / 子章节</th>
+                <th>原始课件页码</th>
+                <th>教材对应分卷与章节</th>
+                <th>覆盖状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>机器学习定义、映射规则实例（语音/图像/围棋/翻译）、I.I.D.假设与机器学习四要素（数据、模型、学习准则、优化算法）</td>
+                <td>P.1 – P.6</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-0">第一卷 Ch2.0：统计学习总论与四要素</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>损失函数、期望风险、经验风险最小化 (ERM)、凸与非凸优化、梯度下降 (GD)、学习率 $\alpha$ 影响、随机梯度下降 (SGD 算法2.1) 与 Mini-Batch SGD</td>
+                <td>P.7 – P.14</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-0">第一卷 Ch2.0：经验风险与梯度下降优化</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>ML $\neq$ Optimization、欠拟合 vs 过拟合、泛化误差 $\mathcal{G}_{\mathcal{D}}(f)$、正则化方法综述（L1/L2几何解释、早停法 Early Stop）</td>
+                <td>P.15 – P.18</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-0">第一卷 Ch2.0：泛化误差与正则化直觉</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.1 线性回归、增广特征/权重向量 $\mathbf{x}\oplus 1$、矩阵微积分（分母布局）、最小二乘闭式解 $(\mathbf{X}\mathbf{X}^T)^{-1}\mathbf{X}\mathbf{y}$ 与不可逆条件分析</td>
+                <td>P.19 – P.24</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-1">第一卷 Ch2.1：线性回归与最小二乘闭式解推导</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>结构风险最小化 (SRM) 与岭回归 $(\mathbf{X}\mathbf{X}^T+\lambda\mathbf{I})^{-1}\mathbf{X}\mathbf{y}$、对数线性回归与广义线性模型 (GLM)、多项式曲线拟合 ($M=0,1,3,9$)、正则化与样本量对过拟合的控制</td>
+                <td>P.25 – P.34</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-1">第一卷 Ch2.1：岭回归、广义线性模型与多项式拟合</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.2 概率分布基础：伯努利分布、二项分布、连续随机变量 PDF/CDF、高斯分布、随机向量联合分布、边缘分布、条件概率（含性别/行业表计算例题）</td>
+                <td>P.35 – P.44</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-2">第一卷 Ch2.2：概率分布、联合/边缘/条件概率</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>随机采样：线性同余发生器 (LCG)、离散分布采样、逆变换采样 (Inverse Transform Sampling) 数学证明、数学期望与大数定律 (LLN)</td>
+                <td>P.45 – P.49</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-2">第一卷 Ch2.2：随机采样原理与大数定律</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.3 朴素贝叶斯分类：贝叶斯法则、属性条件独立假设、分类决策公式、10样本 $(A,B,C)$ 完整例题、数值离散化、拉普拉斯平滑、词袋模型 (BoW) 与 Nvidia GPU 文本分类例题</td>
+                <td>P.50 – P.70</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-3">第一卷 Ch2.3：朴素贝叶斯分类与文本分类实战</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.4 分类器评估：评估准则、Holdout留出法、$n$折交叉验证、留一法 (LOOCV)、验证集与早停、类别不平衡、混淆矩阵、Precision/Recall、P-R曲线与BEP、$F_1$-score、ROC曲线与AUC（含10样本绘图例题）、Scoring/Ranking与Lift提升分析（含手表促销商业例题）</td>
+                <td>P.71 – P.96</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-4">第一卷 Ch2.4：分类器评估体系、ROC/AUC与Lift分析</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.5 线性回归的概率视角：高斯噪声假设、似然函数与极大似然估计 (MLE)、贝叶斯估计先验与后验、最大后验估计 (MAP) 导出岭回归 $\lambda=\sigma^2/\nu^2$、ERM/SRM与MLE/MAP对照表</td>
+                <td>P.97 – P.106</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-5">第一卷 Ch2.5：线性回归概率视角 (MLE vs MAP)</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>2-Statistical Learning.pptx</code></td>
+                <td>2.6 偏差-方差分解推导、模型复杂度权衡、四大定理（没有免费午餐定理 NFL、丑小鸭定理、奥卡姆剃刀、归纳偏置）、PAC 学习理论与样本复杂度公式</td>
+                <td>P.107 – P.118</td>
+                <td><a href="chapter2-statistical-learning.html#sec-2-6">第一卷 Ch2.6：偏差-方差分解、归纳偏置与PAC理论</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>3.1 逻辑回归：回归 vs 分类、二分类正负类、为什么线性回归不适合分类（肿瘤大小例题）、Sigmoid/Logistic 函数、概率解释 $P(y=1|\mathbf{x};\theta)$、线性与多项式非线性决策边界</td>
+                <td>P.1 – P.13</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-1">第二卷 Ch3.1：逻辑回归模型、Sigmoid与决策边界</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>逻辑回归代价函数：非凸平方损失 vs 凸对数/交叉熵损失、分段代价函数合并推导、梯度下降更新公式推导（利用 $g'(z)=g(z)(1-g(z))$）、One-vs-All 多分类、过拟合与 L2 正则化（房价与分类边界、$\lambda=10^{10}$ 欠拟合分析、带正则化梯度下降）</td>
+                <td>P.14 – P.39</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-1">第二卷 Ch3.1：交叉熵损失推导、多分类与正则化</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>3.2 支持向量机 (SVM I)：线性可分与最优超平面、点到超平面距离、支持向量与几何间隔 $\gamma = \frac{2}{\|\mathbf{w}\|}$、尺度不变性归一化 $\min |\mathbf{w}^T\mathbf{x}+b|=1$、硬间隔二次规划模型 $\min \frac{1}{2}\|\mathbf{w}\|^2 \text{ s.t. } y_i(\mathbf{w}^T\mathbf{x}_i+b)\ge 1$</td>
+                <td>P.40 – P.51</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-2">第二卷 Ch3.2：硬间隔 SVM 与最大间隔几何推导</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>拉格朗日乘子法（含求 $f(x,y)=3x-4y \text{ s.t. } x^2+3y^2-129=0$ 极值例题）、强对偶与弱对偶间隙、广义拉格朗日函数 $\theta_{\mathcal{P}}$ 与 $\theta_{\mathcal{D}}$、KKT 条件、SVM 对偶问题完整推导、SMO 算法思想、由 $\alpha^*$ 恢复 $\mathbf{w}^*$ 与 $b^*$</td>
+                <td>P.52 – P.65</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-2">第二卷 Ch3.2：拉格朗日对偶、KKT条件与对偶求解</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>3.3 支持向量机 II (软间隔与核方法)：噪声与离群点敏感性、软间隔松弛变量 $\xi_i$、Hinge Loss $\max(0, 1-z)$、参数 $C$ 对间隔与误分权衡、软间隔对偶推导与盒约束 $0\le \alpha_i\le C$、KKT 三种情况（$\alpha_i=0, 0<\alpha_i<C, \alpha_i=C$）及 6 样本 $\xi_i$ 取值看图分析</td>
+                <td>P.66 – P.78</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-3">第二卷 Ch3.3：软间隔 SVM、Hinge Loss与KKT分析</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>非线性 SVM 与特征映射 $\varphi(\mathbf{x})$、高维内积计算瓶颈 $O(n^d)$ vs 核函数 $\kappa(\mathbf{x},\mathbf{y})=\varphi(\mathbf{x})^T\varphi(\mathbf{y})$ 的 $O(n)$ 捷径、核技巧 (Kernel Trick) 相似度直觉、高斯 RBF 核（无穷维映射）、Mercer 定理（核矩阵对称半正定）、核函数与 $n, m$ 规模选择指南</td>
+                <td>P.79 – P.94</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-3">第二卷 Ch3.3：非线性特征映射、核技巧与Mercer定理</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>3.4 集成学习：基本概念（同质/异质基学习器、弱学习器提升）、Voting 投票与 Stacking 堆叠策略、Bagging（有放回自助采样、$1-1/e\approx 0.632$ 证明、算法伪代码）、平均降低方差 $\sigma^2/K$ 数学证明、随机森林 RF（样本+特征 $\log|d|$ 双重随机）</td>
+                <td>P.95 – P.112</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-4">第二卷 Ch3.4：集成学习、Bagging与随机森林</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>3-Supervised Learning.pptx</code></td>
+                <td>Boosting 与 AdaBoost：串行重赋权思想、AdaBoost 算法伪代码（加权错误率 $\epsilon_t$、模型权重 $\alpha_t=\frac{1}{2}\ln\frac{1-\epsilon_t}{\epsilon_t}$、分布更新 $D_{t+1}$）、10样本决策树桩 3 轮完整手算实例、指数损失函数 $\sum \exp(-y_i H(\mathbf{x}_i))$ 与 Bagging vs Boosting 全面对比</td>
+                <td>P.113 – P.124</td>
+                <td><a href="chapter3-supervised-learning.html#sec-3-4">第二卷 Ch3.4：Boosting、AdaBoost手算实例与对比</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>4-Neural Networks.pptx</code></td>
+                <td>4.1 神经元与激活函数：生物神经元与人工神经元、激活函数四大性质、S型函数（Sigmoid 饱和杀死梯度、非零均值导致权重梯度同号 Zig-Zag 路径、Tanh）、斜坡函数（ReLU、Dead ReLU 成因与正偏置初始化、Leaky ReLU、ELU）、复合函数（Swish 自门控、GELU 高斯误差线性单元）、工程选择准则与导数汇总表</td>
+                <td>P.1 – P.21</td>
+                <td><a href="chapter4-neural-networks.html#sec-4-1">第三卷 Ch4.1：人工神经元与7大激活函数深度剖析</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>4-Neural Networks.pptx</code></td>
+                <td>4.2 &amp; 4.3 神经网络与前馈神经网络 (FNN)：连接主义 PDP 三特征、三种网络拓扑（前馈网络、记忆网络、图网络 GNN/GCN/GAT）、多层感知机 (MLP) 符号体系、矩阵前向传播公式、通用近似定理 (UAT，含双层 ReLU 思考题解答)、Softmax + 交叉熵损失与 Frobenius 范数结构风险</td>
+                <td>P.22 – P.36</td>
+                <td><a href="chapter4-neural-networks.html#sec-4-2">第三卷 Ch4.2–4.3：前馈神经网络、UAT与参数学习</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>4-Neural Networks.pptx</code></td>
+                <td>4.4 反向传播 (BP) 算法：分母布局矩阵微积分与链式法则、$\frac{\partial \mathbf{z}^{(l)}}{\partial w_{ij}^{(l)}}$ 与 $\frac{\partial \mathbf{z}^{(l)}}{\partial \mathbf{b}^{(l)}}$、误差项 $\delta^{(l)} = f_l'(\mathbf{z}^{(l)}) \odot ((\mathbf{W}^{(l+1)})^T\delta^{(l+1)})$ 完整推导、权重梯度外积 $\delta^{(l)}(\mathbf{a}^{(l-1)})^T$、算法 4.1（使用BP的SGD训练过程）</td>
+                <td>P.37 – P.44</td>
+                <td><a href="chapter4-neural-networks.html#sec-4-4">第三卷 Ch4.4：反向传播 (BP) 算法零跳步矩阵推导</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>4-Neural Networks.pptx</code></td>
+                <td>4.5 BP 实例：CS231n 标量图 $f(x,y,z)=(x+y)z$、Sigmoid 神经元计算图分步求导与整体求导对比、4种门单元模式（Add 分配器、Mul 交换器、Max 路由器、Copy 累加器）、Python 前向/反向代码、向量与矩阵（张量）反向传播、ReLU 稀疏雅可比矩阵、矩阵乘法 $\mathbf{y}=\mathbf{x}\mathbf{w}$ 梯度推导 $\frac{\partial L}{\partial \mathbf{x}}=(\frac{\partial L}{\partial \mathbf{y}})\mathbf{w}^T$ 与 $\frac{\partial L}{\partial \mathbf{w}}=\mathbf{x}^T(\frac{\partial L}{\partial \mathbf{y}})$</td>
+                <td>P.45 – P.102</td>
+                <td><a href="chapter4-neural-networks.html#sec-4-5">第三卷 Ch4.5：计算图反向传播实例与矩阵维度对齐</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+              <tr>
+                <td><code>4-Neural Networks.pptx</code></td>
+                <td>4.6 &amp; 4.7 计算图、自动微分与优化难题：自动微分 (AD) $h_1\dots h_6$ 实例、前向模式 ($O(N)$遍) vs 反向模式 ($O(M)$遍) 复杂度对比、PyTorch `requires_grad` 实例、静态计算图 (Theano/TF) vs 动态计算图 (PyTorch)、Keras 30秒建模、神经网络非凸优化损失曲面与梯度消失问题综述</td>
+                <td>P.103 – P.119</td>
+                <td><a href="chapter4-neural-networks.html#sec-4-6">第三卷 Ch4.6–4.7：自动微分、动静态图与优化挑战</a></td>
+                <td class="status-ok">✅ 已完整讲解</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("ml-textbook-theme") || "light";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      const themeBtn = document.getElementById("theme-toggle");
+      if (themeBtn) {
+        themeBtn.textContent = savedTheme === "dark" ? "☀️ 浅色模式" : "🌙 深色模式";
+        themeBtn.addEventListener("click", () => {
+          const cur = document.documentElement.getAttribute("data-theme") || "light";
+          const next = cur === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          localStorage.setItem("ml-textbook-theme", next);
+          themeBtn.textContent = next === "dark" ? "☀️ 浅色模式" : "🌙 深色模式";
+        });
+      }
+      const expandBtn = document.getElementById("expand-all-btn");
+      if (expandBtn) {
+        let open = false;
+        expandBtn.addEventListener("click", () => {
+          open = !open;
+          document.querySelectorAll("details.collapsible").forEach(d => d.open = open);
+          expandBtn.textContent = open ? "📕 收起全部推导与解析" : "📖 展开全部推导与解析";
+        });
+      }
+      window.addEventListener("scroll", () => {
+        const bar = document.getElementById("progress-bar");
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar && h > 0) bar.style.width = Math.min(100, (window.scrollY / h) * 100) + "%";
+      });
+      function renderMath() {
+        if (window.renderMathInElement) {
+          window.renderMathInElement(document.body, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "\\[", right: "\\]", display: true },
+              { left: "$", right: "$", display: false },
+              { left: "\\(", right: "\\)", display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      }
+      renderMath();
+      window.addEventListener("load", renderMath);
+    });
+  </script>
+</body>
+</html>

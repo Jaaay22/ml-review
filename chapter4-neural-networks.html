@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 4 章：神经网络与反向传播 (Neural Networks) | DS4023 交互式教材</title>
+<link rel="stylesheet" href="katex.min.css">
+<script defer src="katex.min.js"></script>
+<script defer src="auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+<style>
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #090d16;
+  --text-secondary: #1e293b;
+  --text-muted: #475569;
+  --accent-primary: #4338ca;
+  --accent-secondary: #1d4ed8;
+  --border-color: #cbd5e1;
+  --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --badge-bg: #e0e7ff; --badge-border: #a5b4fc; --badge-text: #312e81;
+  --why-bg: #eff6ff; --why-border: #2563eb; --why-text: #1e3a8a;
+  --intuition-bg: #f0fdf4; --intuition-border: #16a34a; --intuition-text: #14532d;
+  --math-bg: #faf5ff; --math-border: #9333ea; --math-text: #581c87;
+  --example-bg: #fffbeb; --example-border: #d97706; --example-text: #78350f;
+  --mistake-bg: #fef2f2; --mistake-border: #dc2626; --mistake-text: #7f1d1d;
+  --supp-bg: #f0fdfa; --supp-border: #0d9488; --supp-text: #134e4a;
+  --code-bg: #0f172a; --code-text: #f8fafc;
+}
+[data-theme="dark"] {
+  --bg-primary: #0b1120;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent-primary: #818cf8;
+  --accent-secondary: #60a5fa;
+  --border-color: #334155;
+  --card-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  --badge-bg: rgba(99,102,241,0.22); --badge-border: #818cf8; --badge-text: #e0e7ff;
+  --why-bg: rgba(59,130,246,0.12); --why-border: #60a5fa; --why-text: #bfdbfe;
+  --intuition-bg: rgba(34,197,94,0.12); --intuition-border: #4ade80; --intuition-text: #bbf7d0;
+  --math-bg: rgba(168,85,247,0.12); --math-border: #c084fc; --math-text: #e9d5ff;
+  --example-bg: rgba(245,158,11,0.12); --example-border: #fbbf24; --example-text: #fde68a;
+  --mistake-bg: rgba(239,68,68,0.12); --mistake-border: #f87171; --mistake-text: #fecaca;
+  --supp-bg: rgba(20,184,166,0.12); --supp-border: #2dd4bf; --supp-text: #99f6e4;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.78;
+  font-size: 16px;
+}
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #ec4899, #f59e0b);
+  width: 0%; z-index: 1001; transition: width 0.1s;
+}
+.top-nav {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--card-shadow);
+  flex-wrap: wrap; gap: 0.75rem;
+}
+.brand { font-weight: 800; font-size: 1.05rem; color: var(--accent-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+.nav-links { display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center; }
+.nav-links a {
+  text-decoration: none; color: var(--text-primary); font-size: 0.88rem;
+  padding: 0.38rem 0.75rem; border-radius: 6px; font-weight: 600; transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { background: var(--accent-primary); color: #ffffff !important; }
+.theme-btn {
+  background: var(--bg-tertiary); border: 1px solid var(--border-color);
+  color: var(--text-primary); padding: 0.4rem 0.85rem; border-radius: 6px;
+  cursor: pointer; font-size: 0.85rem; font-weight: 700;
+}
+.layout {
+  display: grid; grid-template-columns: 280px 1fr; max-width: 1440px; margin: 0 auto; gap: 2rem; padding: 1.5rem;
+}
+.sidebar {
+  position: sticky; top: 74px; height: calc(100vh - 94px); overflow-y: auto;
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 12px; padding: 1.2rem; box-shadow: var(--card-shadow);
+}
+.sidebar h3 { font-size: 0.84rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-primary); font-weight: 800; margin-bottom: 0.75rem; }
+.toc-list { list-style: none; }
+.toc-list li { margin-bottom: 0.25rem; }
+.toc-list a {
+  display: block; text-decoration: none; color: var(--text-secondary);
+  font-size: 0.86rem; padding: 0.35rem 0.6rem; border-radius: 6px; font-weight: 500; transition: all 0.15s;
+}
+.toc-list a:hover { background: var(--bg-tertiary); color: var(--accent-primary); font-weight: 700; }
+.toc-sub { padding-left: 0.85rem; font-size: 0.81rem !important; color: var(--text-muted) !important; }
+main { min-width: 0; }
+.hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 55%, #0369a1 100%);
+  color: #ffffff !important;
+  border-radius: 16px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0.32rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+  letter-spacing: 0.02em;
+}
+.hero h1 {
+  font-size: 2.15rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.hero p {
+  font-size: 1.05rem;
+  color: #f8fafc !important;
+  opacity: 1;
+  max-width: 900px;
+  line-height: 1.78;
+  font-weight: 500;
+  margin-bottom: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.section-card {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 14px; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--card-shadow);
+}
+.section-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 0.6rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.9rem; margin-bottom: 1.5rem;
+}
+.section-header h2 { font-size: 1.55rem; font-weight: 800; color: var(--text-primary); }
+.slide-badge {
+  background: var(--badge-bg); border: 1px solid var(--badge-border);
+  color: var(--badge-text); font-size: 0.82rem; font-weight: 800;
+  padding: 0.3rem 0.8rem; border-radius: 999px; font-family: monospace;
+}
+h3 { font-size: 1.24rem; font-weight: 800; margin: 1.6rem 0 0.8rem; color: var(--text-primary); }
+h4 { font-size: 1.06rem; font-weight: 700; margin: 1.2rem 0 0.5rem; color: var(--text-primary); }
+p { margin-bottom: 0.95rem; color: var(--text-secondary); }
+ul, ol { margin: 0.6rem 0 1.1rem 1.4rem; color: var(--text-secondary); }
+li { margin-bottom: 0.4rem; }
+pre {
+  background: var(--code-bg); color: var(--code-text); padding: 1.1rem 1.3rem;
+  border-radius: 10px; overflow-x: auto; font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  font-size: 0.87rem; line-height: 1.6; margin: 1rem 0;
+}
+.ped-box {
+  border-left: 4px solid; border-radius: 0 10px 10px 0;
+  padding: 1.15rem 1.35rem; margin: 1.25rem 0;
+}
+.ped-label {
+  font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.45rem;
+}
+.box-why { background: var(--why-bg); border-color: var(--why-border); }
+.box-why .ped-label { color: var(--why-text); }
+.box-intuition { background: var(--intuition-bg); border-color: var(--intuition-border); }
+.box-intuition .ped-label { color: var(--intuition-text); }
+.box-math { background: var(--math-bg); border-color: var(--math-border); }
+.box-math .ped-label { color: var(--math-text); }
+.box-example { background: var(--example-bg); border-color: var(--example-border); }
+.box-example .ped-label { color: var(--example-text); }
+.box-mistake { background: var(--mistake-bg); border-color: var(--mistake-border); }
+.box-mistake .ped-label { color: var(--mistake-text); }
+.box-supp { background: var(--supp-bg); border-color: var(--supp-border); }
+.box-supp .ped-label { color: var(--supp-text); }
+
+.symbol-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem; margin: 0.9rem 0;
+}
+.symbol-item {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 0.65rem 0.9rem; font-size: 0.88rem; color: var(--text-secondary);
+}
+.symbol-item strong { color: var(--accent-primary); display: block; margin-bottom: 0.15rem; font-size: 0.92rem; }
+
+details {
+  background: var(--bg-tertiary); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 0.9rem 1.2rem; margin: 1rem 0;
+}
+summary {
+  cursor: pointer; font-weight: 700; color: var(--accent-primary);
+  list-style: none; display: flex; align-items: center; justify-content: space-between;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "▼ 展开详细步骤 / 解析"; font-size: 0.78rem; opacity: 0.85; }
+details[open] summary::after { content: "▲ 收起"; }
+details[open] summary { margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border-color); }
+
+.table-wrap { overflow-x: auto; margin: 1.1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; text-align: left; color: var(--text-secondary); }
+th { background: var(--bg-tertiary); font-weight: 800; color: var(--text-primary); }
+tr:nth-child(even) td { background: rgba(148,163,184,0.06); }
+
+.interactive-panel {
+  background: var(--bg-tertiary); border: 2px solid var(--accent-primary);
+  border-radius: 12px; padding: 1.4rem; margin: 1.5rem 0;
+}
+.interactive-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 0.5rem; margin-bottom: 1rem;
+}
+.interactive-title { font-weight: 800; color: var(--accent-primary); font-size: 1.05rem; }
+.controls-row {
+  display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center;
+  background: var(--bg-secondary); padding: 0.9rem 1.1rem; border-radius: 8px;
+  border: 1px solid var(--border-color); margin-bottom: 1rem;
+}
+.control-group { display: flex; flex-direction: column; gap: 0.25rem; min-width: 170px; flex: 1; }
+.control-group label { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); display: flex; justify-content: space-between; }
+.control-group input[type="range"], .control-group select { width: 100%; accent-color: var(--accent-primary); cursor: pointer; padding: 0.3rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600; }
+.btn {
+  background: var(--accent-primary); color: #ffffff !important; border: none;
+  padding: 0.45rem 0.95rem; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.86rem; text-decoration: none;
+}
+.btn-secondary { background: #475569; color: #ffffff !important; }
+canvas {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 8px; width: 100%; max-width: 100%; display: block;
+}
+.stat-badges { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.85rem; }
+.stat-badge {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  padding: 0.45rem 0.85rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+}
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; }
+}
+</style>
+  <link rel="stylesheet" href="reading.css">
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<nav class="top-nav">
+  <a href="index.html" class="brand">🎓 DS4023 Machine Learning 交互式教材</a>
+  <div class="nav-links">
+    <a href="index.html">🏠 课程总览与导航</a>
+    <a href="chapter2-statistical-learning.html">Ch.2 统计学习基础 (P.1–118)</a>
+    <a href="chapter3-supervised-learning.html">Ch.3 监督学习精讲 (P.1–124)</a>
+    <a href="chapter4-neural-networks.html" class="active">Ch.4 神经网络与反向传播 (P.1–119)</a>
+    <button class="theme-btn" onclick="toggleTheme()">🌗 切换深浅色</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>📖 第 4 章目录 (119 页全覆盖)</h3>
+    <ul class="toc-list">
+      <li><a href="#sec-overview">0. 学习目标、知识全景与前置基础</a></li>
+      <li><a href="#sec-4-1">4.1 神经元与激活函数 (P.4–21)</a></li>
+      <li><a href="#sec-4-1-neuron" class="toc-sub">• 生物神经元与人工神经元模型</a></li>
+      <li><a href="#sec-4-1-prop" class="toc-sub">• 激活函数的四大理想性质</a></li>
+      <li><a href="#sec-4-1-sigtanh" class="toc-sub">• Sigmoid (梯度杀死与Zig-Zag) &amp; Tanh</a></li>
+      <li><a href="#sec-4-1-relu" class="toc-sub">• ReLU (Dead ReLU)、Leaky ReLU 与 ELU</a></li>
+      <li><a href="#sec-4-1-swish" class="toc-sub">• Swish、GELU 与 SoftPlus 导数汇总</a></li>
+      <li><a href="#sec-4-2">4.2–4.3 神经网络与前馈网络 (P.22–36)</a></li>
+      <li><a href="#sec-4-2-topo" class="toc-sub">• 三种网络拓扑 (FNN/记忆/图网络 GNN)</a></li>
+      <li><a href="#sec-4-3-fnn" class="toc-sub">• 前馈网络矩阵记号与前向传播</a></li>
+      <li><a href="#sec-4-3-uat" class="toc-sub">• 通用近似定理与 ReLU 思考题解答</a></li>
+      <li><a href="#sec-4-3-loss" class="toc-sub">• Softmax 交叉熵与 Frobenius 正则化</a></li>
+      <li><a href="#sec-4-4">4.4 反向传播 (BP) 算法推导 (P.37–44)</a></li>
+      <li><a href="#sec-4-4-calc" class="toc-sub">• 分母布局矩阵微积分与链式法则</a></li>
+      <li><a href="#sec-4-4-bp" class="toc-sub">• 误差项 δ^(l) 与梯度四大公式零跳步推导</a></li>
+      <li><a href="#sec-4-5">4.5 BP 实例：标量、门模式与矩阵 (P.45–102)</a></li>
+      <li><a href="#sec-4-5-scalar" class="toc-sub">• 实例 1 &amp; 2：CS231n 计算图逐步手算</a></li>
+      <li><a href="#sec-4-5-gates" class="toc-sub">• 四大梯度流门模式与 Python 代码</a></li>
+      <li><a href="#sec-4-5-matrix" class="toc-sub">• 向量/矩阵反向传播与 y=xw 维度法则</a></li>
+      <li><a href="#sec-4-6">4.6–4.7 自动微分与优化难题 (P.103–119)</a></li>
+      <li><a href="#sec-4-6-ad" class="toc-sub">• 前向模式 vs 反向模式 AD 复杂度</a></li>
+      <li><a href="#sec-4-6-pytorch" class="toc-sub">• PyTorch 实例、静态图 vs 动态图</a></li>
+      <li><a href="#sec-4-7-opt" class="toc-sub">• 非凸损失曲面与梯度消失问题</a></li>
+      <li><a href="#sec-cheatsheet">5. 核心公式速查表 (Formula Cheat Sheet)</a></li>
+      <li><a href="#sec-traps">6. 常见考试陷阱与易错点</a></li>
+      <li><a href="#sec-practice">7. 分层练习题与详细解析</a></li>
+      <li><a href="#sec-checklist">8. 原课件 119 页全覆盖核对表</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="hero-badge">BNBU DS4023 Machine Learning · Volume 3 (Slides P.1 – P.119)</div>
+      <h1>第 4 章：神经网络与反向传播 (Neural Networks &amp; Backpropagation)</h1>
+      <p>从单个神经元与 7 种激活函数（Sigmoid、Tanh、ReLU、Leaky ReLU、ELU、Swish、GELU）的设计权衡出发，建立多层前馈神经网络（FNN）与通用近似定理的数学体系，零跳步推导分母布局下的误差反向传播（BP）四大核心方程，手算 Stanford CS231n 标量与矩阵计算图，深入理解自动微分（AD）与梯度消失的本质。</p>
+    </div>
+
+    <!-- Section 0: Overview -->
+    <section class="section-card" id="sec-overview">
+      <div class="section-header">
+        <h2>0. 学习目标、知识全景与前置衔接</h2>
+        <span class="slide-badge">对应课件 4-Neural Networks.pptx P.1 – P.3</span>
+      </div>
+
+      <h3>🎯 1. Learning Objectives（本章学习目标）</h3>
+      <ul>
+        <li><strong>洞悉激活函数（Activation Functions）的演进逻辑</strong>：掌握人工神经元 $z = \mathbf{w}^T\mathbf{x}+b, a = f(z)$，深刻理解为什么 Sigmoid 会导致<strong>饱和梯度消失（Killing Gradients）</strong>与<strong>非零中心化引起的权重更新之字形震荡（Zig-Zag Path）</strong>，以及 ReLU 的<strong>神经元坏死（Dead ReLU）</strong>成因与 Leaky ReLU / ELU / Swish / GELU 的改进。</li>
+        <li><strong>掌握前馈神经网络（FNN）与通用近似定理</strong>：熟练运用各层矩阵维度记号（$\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}$），理解通用近似定理（Theorem 4.1）并能严格回答课件思考题“双层 ReLU 网络能否逼近任意有界闭集连续函数”。</li>
+        <li><strong>彻底打通反向传播（Backpropagation, BP）与矩阵求导</strong>：在分母布局（Denominator Layout）下零跳步推导误差项递推公式 $\delta^{(l)} = f_l'(\mathbf{z}^{(l)}) \odot ((\mathbf{W}^{(l+1)})^T \delta^{(l+1)})$ 与参数梯度 $\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}} = \delta^{(l)}(\mathbf{a}^{(l-1)})^T$；熟练手算 CS231n 标量计算图、四大门（Add/Mul/Max/Copy Gate）以及矩阵乘法 $\mathbf{y}=\mathbf{x}\mathbf{w}$ 的反向传播。</li>
+        <li><strong>理解计算图、自动微分（AD）与深度优化难题</strong>：区分前向模式（$N$ 遍）与反向模式（$M$ 遍）自动微分的计算复杂度，理解静态图与动态图的优劣，掌握非凸优化与梯度消失（Vanishing Gradient）的数学根源。</li>
+      </ul>
+
+      <h3>🗺️ 2. Big Picture（从手工特征工程到端到端表示学习）</h3>
+      <p>回顾我们在第 2 章（多项式曲线拟合）和第 3 章（非线性逻辑回归与核 SVM）中处理非线性问题的方法：我们统一使用了广义线性模型 $\hat{y} = g(\mathbf{w}^T \varphi(\mathbf{x}) + b)$（课件 P.32）。</p>
+      <ul>
+        <li>在传统机器学习中，特征映射 $\varphi(\mathbf{x})$ 要么靠专家手工设计（如凑出 $x_1^2, x_1 x_2$），要么靠固定的核函数（如 RBF 核）隐式定义；</li>
+        <li><strong>神经网络（Neural Networks）的革命性突破在于</strong>：让特征变换 $\varphi(\mathbf{x})$ 本身也由多层带参数的可学习非线性神经元组成！网络低层自动从原始像素中提取<strong>边缘（Edges）</strong>，中层组合成<strong>局部器官（Combinations of edges，如眼睛、鼻子）</strong>，高层组合成<strong>完整物体模型（Object models，如人脸）</strong>，最后一层接上逻辑回归或 Softmax 分类器即可完成端到端学习（见课件 P.32–P.33）！</li>
+      </ul>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- CHAPTER 4.1: NEURON & ACTIVATION FUNCTIONS                        -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-4-1">
+      <div class="section-header">
+        <h2>4.1 神经元与激活函数全解 (Neuron &amp; Activation Functions)</h2>
+        <span class="slide-badge">对应课件 P.4 – P.21</span>
+      </div>
+
+      <h3 id="sec-4-1-neuron">4.1.1 生物神经元与人工神经元模型 (P.4 – P.6)</h3>
+      <p>大脑皮层由数百亿个<strong>生物神经元（Biological Neurons，课件 P.5）</strong>组成。每个生物神经元包含：接收外部其它神经元电化学信号的<strong>树突（Dendrites）</strong>、汇总信号的<strong>细胞体（Cell body / Soma）</strong>、传导神经冲动的<strong>轴突（Axon）</strong>以及与其他神经元连接的<strong>突触末端（Synaptic terminals）</strong>。单个神经细胞只有两种基本状态：<strong>兴奋（Excitation）</strong>与<strong>抑制（Inhibition）</strong>。</p>
+      <p>受此启发，McCulloch 和 Pitts (1943) 提出了<strong>人工神经元模型（Artificial Neuron，课件 P.6）</strong>：</p>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 人工神经元的两步计算公式 (Slide P.6)</div>
+        <p>假设一个神经元接收 $d$ 个输入信号 $\mathbf{x} = (x_1, x_2, \dots, x_d)^T \in \mathbb{R}^d$，每个连接具有对应的权重 $w_i$，外加一个偏置项 $b$（对应输入恒为 $1$ 的连接）：</p>
+        <ol>
+          <li><strong>第一步（线性加权求和，计算净输入 Net Input $z$）</strong>：
+            $$z = \sum_{i=1}^d w_i x_i + b = \mathbf{w}^T\mathbf{x} + b$$
+          </li>
+          <li><strong>第二步（非线性激活，计算活性值 Activity Value $a$）</strong>：
+            $$a = f(z)$$
+          </li>
+        </ol>
+        <p>其中 $f(\cdot)$ 称为<strong>激活函数（Activation Function）</strong>。请注意：如果去掉非线性激活函数 $f$（或者令 $f(z) = z$ 为恒等映射），那么单个神经元就退化成了我们在第 2 章学过的普通线性回归模型！</p>
+      </div>
+
+      <h3 id="sec-4-1-prop">4.1.2 激活函数的四大理想性质 (Properties of Activation Function, P.7)</h3>
+      <p>为了使深层神经网络既具备强大的非线性拟合能力，又能用梯度下降法高效稳定地训练，理想的激活函数 $f(z)$ 应当具备以下<strong>四大性质（课件 P.7 必考简答题点）</strong>：</p>
+      <ol>
+        <li><strong>连续并可导（或几乎处处可导）的非线性函数（Continuous and differentiable nonlinear function）</strong>：非线性保证多层网络不会坍缩为单层线性变换；可导性使我们能够直接使用数值优化方法（如梯度下降）学习网络参数。</li>
+        <li><strong>函数本身及其导数尽可能简单（Simple function and derivative）</strong>：在前向传播和反向传播中，每个神经元都要计算成千上万次 $f(z)$ 和 $f'(z)$，形式简单（如 ReLU）能大幅提升网络计算效率。</li>
+        <li><strong>导数的值域位于合适的区间内（Derivative range in an appropriate interval）</strong>：导数既不能太大（否则多层连乘导致<strong>梯度爆炸 Exploding Gradients</strong>），也不能太小趋近于 $0$（否则多层连乘导致<strong>梯度消失 Vanishing Gradients</strong>），从而保证训练的效率与稳定性。</li>
+        <li><strong>单调递增或整体呈上升趋势（Monotonically increasing / on the rise）</strong>：保证净输入越大，激活输出整体越强（注：现代激活函数如 Swish、GELU 在负半轴有轻微的非单调下凹，因此课件特别指出 *"Maybe not. But on the whole, it is on the rise"*）。</li>
+      </ol>
+
+      <h3 id="sec-4-1-sigtanh">4.1.3 S 型激活函数：Sigmoid 的两大致命缺陷与 Tanh 的改进 (P.8 – P.12)</h3>
+      <div class="ped-box box-why">
+        <div class="ped-label">❓ Step 1 &amp; 2: Why &amp; Intuition — 为什么曾经无比流行的 Sigmoid 如今在隐藏层被弃用？ (P.9 – P.11)</div>
+        <p><strong>1. Sigmoid 函数（又称 Logistic 函数，课件 P.9）</strong>：</p>
+        $$\sigma(x) = \frac{1}{1 + e^{-x}}, \qquad \sigma'(x) = \sigma(x)\left(1 - \sigma(x)\right) \in (0, \; 0.25]$$
+        <p>Sigmoid 把任意实数压缩到 $[0, 1]$ 区间，历史上非常受欢迎，因为它可以直观地解释为生物神经元的“饱和放电率（Firing rate）”。然而，在深层网络隐藏层中使用 Sigmoid 存在<strong>两大致命缺陷</strong>：</p>
+
+        <p><strong>🔥 缺陷一：饱和神经元会“杀死”梯度（Saturated neurons "kill" the gradients，课件 P.10）</strong></p>
+        <p>观察计算图中的 Sigmoid 门：反向传播时，下游梯度等于上游梯度乘以局部导数 $\frac{\partial L}{\partial x} = \frac{\partial L}{\partial \sigma} \cdot \frac{\partial \sigma}{\partial x}$。提问（P.10）：</p>
+        <ul>
+          <li>当 $x = -10$ 时：$\sigma(-10) \approx 0.000045 \implies \frac{\partial \sigma}{\partial x} = \sigma(1-\sigma) \approx 0$（左端饱和，<strong>梯度被彻底乘以 0 杀死！</strong>）</li>
+          <li>当 $x = 0$ 时：$\sigma(0) = 0.5 \implies \frac{\partial \sigma}{\partial x} = 0.5 \times (1 - 0.5) = \mathbf{0.25}$（导数达到最大值，梯度正常流通，但也缩小了 $4$ 倍）</li>
+          <li>当 $x = +10$ 时：$\sigma(10) \approx 0.999955 \implies \frac{\partial \sigma}{\partial x} \approx 0$（右端饱和，<strong>梯度再次被杀死！</strong>）</li>
+        </ul>
+        <p>一旦参数初始化不当或学习率偏大导致神经元落入 $|x| > 5$ 的饱和区，反向传回来的梯度几乎为 $0$，底层权重将彻底停止更新！</p>
+
+        <p><strong>🔥 缺陷二：Sigmoid 输出不是零中心化的（Outputs are not zero-centered $\to$ Zig-Zag 震荡，课件 P.11）</strong></p>
+        <p><em>这是面试与考试中最经典的深度理解题（P.11）</em>：考虑下一层神经元接收的输入 $x_1, x_2, \dots, x_d$ 全部来自上一层 Sigmoid 的输出，因此<strong>所有的 $x_i > 0$ 恒为正数</strong>！现在计算当前神经元 $f(\sum_i w_i x_i + b)$ 对权重向量 $\mathbf{w} = (w_1, \dots, w_d)^T$ 的梯度：</p>
+        $$\frac{\partial L}{\partial w_i} = \frac{\partial L}{\partial f} \cdot \frac{\partial f}{\partial w_i} = \underbrace{\left(\frac{\partial L}{\partial f} \cdot f'\Big(\sum_j w_j x_j + b\Big)\right)}_{\text{同一个标量 } \delta} \cdot x_i \implies \frac{\partial L}{\partial \mathbf{w}} = \delta \cdot \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_d \end{bmatrix}$$
+        <p>因为 $x_1, x_2, \dots, x_d$ 全是正数，所以对于同一个神经元的所有权重 $w_1, \dots, w_d$，它们的梯度 $\frac{\partial L}{\partial w_i}$ 的正负号完全取决于标量 $\delta$ 的正负号——<strong>要么全部同时为正（All Positive），要么全部同时为负（All Negative）</strong>！</p>
+        <p>如课件 P.11 二维权重空间 $(w_1, w_2)$ 图示：每次梯度下降更新 $\Delta \mathbf{w}$ 只能往<strong>第一象限 $(+,+)$</strong> 或 <strong>第三象限 $(-,-)$</strong> 走。如果真实最优权重向量 $\mathbf{w}^*$ 位于第四象限（需要 $w_1$ 增大而 $w_2$ 减小），梯度下降无法直接斜着走过去，只能沿着允许象限走出一条低效的<strong>之字形折线路径（Zig-Zag Path）</strong>，严重拖慢收敛速度！（这也解释了为什么输入数据预处理时一定要做 Zero-Mean 零均值化）。</p>
+      </div>
+
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 2. 双曲正切函数 Tanh (Hyperbolic Tangent, Slide P.12)</div>
+        $$\tanh(x) = \frac{\exp(x) - \exp(-x)}{\exp(x) + \exp(-x)} = 2\sigma(2x) - 1, \qquad \tanh'(x) = 1 - \tanh^2(x) \in (0, \; 1]$$
+        <ul>
+          <li><strong>优点</strong>：将实数压缩到 $[-1, 1]$，且 $\tanh(0) = 0$，<strong>输出是零中心化的（Zero-centered）</strong>！完美解决了 Sigmoid 的 Zig-Zag 梯度同号震荡问题，且导数峰值达到 $1.0$（是 Sigmoid $0.25$ 的 $4$ 倍）。因此在隐藏层中，<strong>Tanh 总是优于 Sigmoid</strong>。</li>
+          <li><strong>缺点</strong>：当 $|x|$ 较大进入两端饱和区时，$\tanh(x) \to \pm 1 \implies \tanh'(x) \to 0$，<strong>依然存在饱和神经元杀死梯度的问题</strong>！</li>
+        </ul>
+      </div>
+
+      <h3 id="sec-4-1-relu">4.1.4 斜坡激活函数：ReLU、Dead ReLU 现象、Leaky ReLU 与 ELU (P.13 – P.17)</h3>
+      <div class="ped-box box-intuition">
+        <div class="ped-label">⚡ Step 2 &amp; 3: Intuition &amp; How — ReLU 如何引爆深度学习革命？为什么会“死掉”？ (P.13 – P.17)</div>
+        <p><strong>1. ReLU（Rectified Linear Unit，修正线性单元，课件 P.13 – P.15）：</strong></p>
+        $$f(x) = \max(0, x) = \begin{cases} x & \text{if } x > 0 \\ 0 & \text{if } x \le 0 \end{cases}, \qquad f'(x) = \mathbb{I}(x > 0) = \begin{cases} 1 & \text{if } x > 0 \\ 0 & \text{if } x < 0 \end{cases}$$
+        <ul>
+          <li><strong>四大优势（P.13）</strong>：① <strong>在正半轴（$x > 0$）永不饱和</strong>，导数恒为 $1$，上游梯度原封不动传回底层（当 $x=10$ 时导数依然是 $1$！）；② <strong>计算极其高效</strong>（只需判断符号，无需昂贵的 $\exp()$ 指数运算）；③ <strong>收敛速度比 Sigmoid/Tanh 快约 6 倍</strong>（Krizhevsky et al. AlexNet 经典结论）；④ 比 Sigmoid 更符合生物神经元的稀疏激活特性。</li>
+          <li><strong>两大缺陷（P.13–P.15）</strong>：① 输出非零中心化（$f(x) \ge 0$）；② 当 $x < 0$ 时梯度为 $0$，引发著名的 <strong>Dead ReLU（神经元坏死问题，P.15）</strong>！</li>
+        </ul>
+        <p><strong>💀 深入剖析 Dead ReLU（课件 P.15 数据云图示）</strong>：在特征空间中，每个 ReLU 神经元对应一条超平面分界线 $\mathbf{w}^T\mathbf{x}+b=0$。如果因为：(a) <strong>初始化运气不好</strong>，分界线一开始就背对整个训练数据云（Data Cloud），使得所有训练样本代入后都有 $\mathbf{w}^T\mathbf{x}+b < 0$；或者 (b) <strong>学习率（Learning Rate）设得过大</strong>，某次巨大的梯度更新把权重参数一把推到了数据云外侧——那么该神经元对所有样本的输出恒为 $0$，反向传播流经该神经元的局部梯度也恒为 $0$，它的权重将<strong>永远无法再被更新（不可逆转地“脑死亡”）</strong>！<br>
+        <em>工程小贴士（P.15）</em>：为了减少初始 Dead ReLU，人们有时会将 ReLU 神经元的偏置 $b$ 初始化为微小的正数（如 $0.01$）。</p>
+
+        <p><strong>2. Leaky ReLU（带泄露修正线性单元，课件 P.16）：</strong></p>
+        $$f(x) = \max(0.01x, \; x) = \begin{cases} x & \text{if } x > 0 \\ 0.01x & \text{if } x \le 0 \end{cases}, \qquad f'(x) = \begin{cases} 1 & \text{if } x > 0 \\ 0.01 & \text{if } x < 0 \end{cases}$$
+        <p>通过给负半轴赋予一个微小的非零斜率（如 $0.01$ 或可学习参数 $\alpha$），使得 $x < 0$ 时仍有 $0.01$ 的微弱梯度流过，从而<strong>彻底根治了 Dead ReLU 问题（Neurons will not "die"）</strong>，同时保留了正半轴不饱和、计算极快的所有优点！</p>
+
+        <p><strong>3. ELU（Exponential Linear Units，指数线性单元，课件 P.17, P.21）：</strong></p>
+        $$f(x) = \begin{cases} x & \text{if } x > 0 \\ \alpha\left(\exp(x) - 1\right) & \text{if } x \le 0 \end{cases}, \qquad f'(x) = \begin{cases} 1 & \text{if } x > 0 \\ \alpha\exp(x) & \text{if } x \le 0 \end{cases}$$
+        <p>兼具 ReLU 的优点，且负半轴可输出负值，使<strong>激活输出均值更接近零（Closer to zero mean outputs）</strong>；相比于 Leaky ReLU 在负半轴无限下降，ELU 在负半轴软饱和于 $-\alpha$，对输入噪声具有更强的鲁棒性。缺点是负半轴需要计算 $\exp(x)$。</p>
+      </div>
+
+      <h3 id="sec-4-1-swish">4.1.5 复合/自门控激活函数：Swish、GELU 与激活函数导数总表 (P.18 – P.21)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — Swish、GELU、SoftPlus 与实战选型建议 (P.18 – P.21)</div>
+        <p><strong>1. Swish 函数（自门控激活函数 Self-gated activation function，课件 P.18）：</strong></p>
+        $$\text{swish}(x) = x \cdot \sigma(\beta x) = \frac{x}{1 + \exp(-\beta x)}$$
+        <p>其中 $\beta$ 可以是常数或可训练参数：当 $\beta = 0$ 时，$\sigma(0)=0.5 \implies \text{swish}(x) = \frac{x}{2}$ 退化为线性函数；当 $\beta \to +\infty$ 时，$\sigma(\beta x)$ 趋近于 $0\text{-}1$ 阶跃函数，Swish 退化为 $\text{ReLU}(x)$；当 $\beta = 1$ 时，是一条处处光滑、在 $x < 0$ 处有轻微下凹的自门控曲线。</p>
+
+        <p><strong>2. GELU（Gaussian Error Linear Unit，高斯误差线性单元，课件 P.19）：</strong></p>
+        <p><strong>核心思想（依赖数据的随机正则化期望）</strong>：将输入 $x$ 随机乘以 $0$ 或 $1$（类似 Dropout），但乘以 $1$ 的概率取决于输入 $x$ 本身有多大——当 $x$ 越大时，越可能乘以 $1$ 保留；当 $x$ 越小时，越可能乘以 $0$ 丢弃。具体而言，设标准正态分布随机变量 $X \sim \mathcal{N}(0, 1)$，令门控概率为累积分布函数 $\Phi(x) = P(X \le x)$，取期望即得：</p>
+        $$\text{gelu}(x) = x P(X \le x) = \frac{x}{2}\left(1 + \text{erf}\left(\frac{x}{\sqrt{2}}\right)\right) \approx x\,\sigma(1.702x)$$
+        <p>GELU 是当今 <strong>Transformer 架构（如 BERT、GPT 系列、Vision Transformer ViT）</strong>中最常用的标准激活函数！</p>
+
+        <p><strong>3. 实战选型黄金法则（In Practice，课件 P.20）：</strong></p>
+        <ul>
+          <li><strong>不要过度纠结，默认首选直接用 ReLU（"Don't think too hard. Just use ReLU"）</strong>；</li>
+          <li>如果你想压榨出最后 $0.1\%$ 的性能提升，可以尝试 <strong>Leaky ReLU / ELU / GELU</strong>；</li>
+          <li><strong>不要在深层网络的隐藏层中使用 Sigmoid 或 Tanh</strong>（Sigmoid 仅用于二分类输出层计算概率，或 LSTM/Swish 的门控结构）。</li>
+        </ul>
+
+        <p><strong>4. 课件 P.21 常用激活函数及其导数标准汇总表（含 SoftPlus）：</strong></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>激活函数名称</th>
+                <th>函数表达式 $f(x)$</th>
+                <th>导数表达式 $f'(x)$ (Slide P.21)</th>
+                <th>值域与核心特点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Logistic (Sigmoid)</strong></td>
+                <td>$f(x) = \frac{1}{1+\exp(-x)}$</td>
+                <td>$f'(x) = f(x)(1 - f(x))$</td>
+                <td>$(0,1)$；饱和杀死梯度，非零均值导致 Zig-Zag</td>
+              </tr>
+              <tr>
+                <td><strong>Tanh</strong></td>
+                <td>$f(x) = \frac{\exp(x)-\exp(-x)}{\exp(x)+\exp(-x)}$</td>
+                <td>$f'(x) = 1 - f(x)^2$</td>
+                <td>$(-1,1)$；零中心化，但两端饱和依然杀死梯度</td>
+              </tr>
+              <tr>
+                <td><strong>ReLU</strong></td>
+                <td>$f(x) = \max(0, x)$</td>
+                <td>$f'(x) = \mathbb{I}(x > 0)$</td>
+                <td>$[0, +\infty)$；正区不饱和、计算极快，存在 Dead ReLU</td>
+              </tr>
+              <tr>
+                <td><strong>ELU</strong></td>
+                <td>$f(x) = \max(0, x) + \min(0, \gamma(\exp(x)-1))$</td>
+                <td>$f'(x) = \mathbb{I}(x > 0) + \mathbb{I}(x \le 0)\cdot \gamma\exp(x)$</td>
+                <td>$(-\gamma, +\infty)$；均值接近 0，负区软饱和抗噪</td>
+              </tr>
+              <tr>
+                <td><strong>SoftPlus</strong></td>
+                <td>$f(x) = \log(1 + \exp(x))$</td>
+                <td>$f'(x) = \frac{1}{1 + \exp(-x)} = \sigma(x)$</td>
+                <td>$(0, +\infty)$；ReLU 的处处可导光滑近似版本</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE VISUALIZATION 1: ACTIVATION FUNCTIONS EXPLORER -->
+      <div class="interactive-panel">
+        <div class="interactive-header">
+          <span class="interactive-title">🎮 交互式实验室 4.1：7 大激活函数 $f(x)$ 与导数 $f'(x)$ 实时对比分析仪</span>
+          <span style="font-size:0.82rem; color:var(--text-muted);">切换不同激活函数并移动输入 $x$，直观对比饱和区导数衰减与负半轴响应</span>
+        </div>
+        <div class="controls-row">
+          <div class="control-group">
+            <label><span>选择激活函数 (Activation Function)</span></label>
+            <select id="act-type" onchange="updateActSim()">
+              <option value="sigmoid">1. Sigmoid / Logistic: σ(x) = 1/(1+e⁻ˣ)</option>
+              <option value="tanh">2. Tanh: tanh(x) = 2σ(2x) - 1</option>
+              <option value="relu" selected>3. ReLU: max(0, x)</option>
+              <option value="leaky">4. Leaky ReLU: max(0.1x, x)</option>
+              <option value="elu">5. ELU (α=1.0): x if x&gt;0 else α(eˣ-1)</option>
+              <option value="swish">6. Swish (β=1.0): x·σ(βx)</option>
+              <option value="gelu">7. GELU: x·Φ(x) ≈ x·σ(1.702x)</option>
+              <option value="softplus">8. SoftPlus: ln(1 + eˣ)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label><span>输入净活性值 $x$</span><span id="act-x-val">x = 1.5</span></label>
+            <input type="range" id="act-x" min="-6" max="6" step="0.1" value="1.5" oninput="updateActSim()">
+          </div>
+        </div>
+        <canvas id="actCanvas" width="820" height="300"></canvas>
+        <div class="stat-badges" id="act-stats"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- CHAPTER 4.2 & 4.3: NEURAL NETWORK & FEEDFORWARD NEURAL NETWORK    -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-4-2">
+      <div class="section-header">
+        <h2>4.2 – 4.3 人工神经网络与前馈神经网络 (ANN &amp; Feedforward Neural Network)</h2>
+        <span class="slide-badge">对应课件 P.22 – P.36</span>
+      </div>
+
+      <h3 id="sec-4-2-topo">4.2.1 人工神经网络三要素、三种拓扑结构与连接主义 (P.22 – P.26)</h3>
+      <p><strong>人工神经网络（Artificial Neural Network, ANN，课件 P.23）</strong>主要由大量神经元及其有向连接构成，研究与设计时需考虑三个核心方面：</p>
+      <ol>
+        <li><strong>神经元的激活规则（Activation rules of neurons）</strong>：输入到输出的非线性映射函数；</li>
+        <li><strong>网络的拓扑结构（Topological structure of network）</strong>：不同神经元之间的连接方式；</li>
+        <li><strong>学习算法（Learning Algorithm）</strong>：如何从训练数据中学习连接权重参数。</li>
+      </ol>
+      <p><strong>三种主要网络拓扑结构（课件 P.24 – P.25）：</strong></p>
+      <ul>
+        <li><strong>(a) 前馈网络（Feedforward Network）</strong>：各个神经元按层排列，信号从输入层单向流向输出层，图中无任何环路（有向无环图 Directed Acyclic Graph, DAG）。</li>
+        <li><strong>(b) 记忆网络（Memory / Recurrent Network）</strong>：神经元之间包含反馈环路（Feedback loops，图中带蓝色虚线自环），网络状态具有历史记忆能力（如 RNN、LSTM）。</li>
+        <li><strong>(c) 图网络（Graph Neural Networks, GNNs，P.25）</strong>：定义在任意图结构数据（如知识图谱、社交网络、分子结构图）上的神经网络，代表性模型包括：<strong>图卷积网络 GCN</strong>（Kipf &amp; Welling, ICLR 2017）、<strong>图注意力网络 GAT</strong>（Veličković et al., ICLR 2018）以及支持大规模图小批量归纳学习的 <strong>GraphSAGE</strong>（Hamilton et al., NeurIPS 2017）。</li>
+      </ul>
+      <p><strong>连接主义（Connectionism）与并行分布处理（PDP）三大特征（课件 P.26）</strong>：1980 年代后期兴起的 PDP 网络具有三个核心特征：① 信息表示是<strong>分布式的（Distributed / Non-local）</strong>；② 记忆与知识存储在<strong>单元之间的连接权重中</strong>；③ 通过<strong>逐渐改变单元间的连接强度</strong>来学习新知识。</p>
+
+      <h3 id="sec-4-3-fnn">4.3.1 前馈神经网络 (FNN / MLP) 标准记号与前向传播公式 (P.27 – P.30)</h3>
+      <p><strong>前馈神经网络（Feedforward Neural Network, FNN，又称全连接神经网络 Fully Connected NN 或多层感知机 Multilayer Perceptron, MLP，课件 P.28）</strong>中，神经元被划分为<strong>输入层（Input Layer，第 $0$ 层）</strong>、若干个<strong>隐藏层（Hidden Layers，第 $1 \sim L-1$ 层）</strong>和<strong>输出层（Output Layer，第 $L$ 层）</strong>。层内无连接，相邻两层神经元两两全连接。</p>
+
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — 前馈神经网络标准符号表与矩阵前向传播 (Slide P.29 – P.30)</div>
+        <div class="symbol-grid">
+          <div class="symbol-item"><strong>$L$</strong>神经网络的总层数（不含第 $0$ 层输入层）</div>
+          <div class="symbol-item"><strong>$M_l$</strong>第 $l$ 层神经元的个数（$M_0 = d$ 为输入特征维度）</div>
+          <div class="symbol-item"><strong>$f_l(\cdot)$</strong>第 $l$ 层神经元的激活函数</div>
+          <div class="symbol-item"><strong>$\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}$</strong>从第 $l-1$ 层到第 $l$ 层的<strong>权重矩阵</strong></div>
+          <div class="symbol-item"><strong>$\mathbf{b}^{(l)} \in \mathbb{R}^{M_l}$</strong>从第 $l-1$ 层到第 $l$ 层的<strong>偏置列向量</strong></div>
+          <div class="symbol-item"><strong>$\mathbf{z}^{(l)} \in \mathbb{R}^{M_l}$</strong>第 $l$ 层神经元的<strong>净输入（净活性值）</strong></div>
+          <div class="symbol-item"><strong>$\mathbf{a}^{(l)} \in \mathbb{R}^{M_l}$</strong>第 $l$ 层神经元的<strong>输出（活性值）</strong>，其中 $\mathbf{a}^{(0)} = \mathbf{x}$</div>
+        </div>
+        <p><strong>⚠️ 维度记忆窍门（P.29–P.30）</strong>：为什么从第 $l-1$ 层（有 $M_{l-1}$ 个神经元）到第 $l$ 层（有 $M_l$ 个神经元）的权重矩阵维度是 $\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}$（目标层行数在前，源层列数在后）？因为这样左乘列向量 $\mathbf{a}^{(l-1)} \in \mathbb{R}^{M_{l-1} \times 1}$ 时，内维 $M_{l-1}$ 刚好消掉，直接得到 $\mathbb{R}^{M_l \times 1}$ 的列向量 $\mathbf{z}^{(l)}$！</p>
+        $$\mathbf{z}^{(l)} = \mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}, \qquad \mathbf{a}^{(l)} = f_l\left(\mathbf{z}^{(l)}\right) \quad \implies \quad \mathbf{a}^{(l)} = f_l\left(\mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}\right)$$
+        <p>信息从输入层逐层前向传播（Forward Propagation，P.30）：</p>
+        $$\mathbf{x} = \mathbf{a}^{(0)} \xrightarrow{\mathbf{W}^{(1)}, \mathbf{b}^{(1)}} \mathbf{z}^{(1)} \xrightarrow{f_1} \mathbf{a}^{(1)} \xrightarrow{\mathbf{W}^{(2)}, \mathbf{b}^{(2)}} \mathbf{z}^{(2)} \longrightarrow \cdots \longrightarrow \mathbf{a}^{(L-1)} \xrightarrow{\mathbf{W}^{(L)}, \mathbf{b}^{(L)}} \mathbf{z}^{(L)} \xrightarrow{f_L} \mathbf{a}^{(L)} = \phi(\mathbf{x}; \mathbf{W}, \mathbf{b})$$
+      </div>
+
+      <h3 id="sec-4-3-uat">4.3.2 通用近似定理 (Universal Approximation Theorem) 与课件思考题解答 (P.31)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 定理 4.1：通用近似定理 (Universal Approximation Theorem, Cybenko 1989 / Hornik et al. 1989, P.31)</div>
+        <p>令 $\varphi(\cdot)$ 是一个<strong>非常数、有界、单调递增的连续函数</strong>，$\mathcal{I}_d = [0, 1]^d$ 是一个 $d$ 维单位超立方体，$C(\mathcal{I}_d)$ 是定义在 $\mathcal{I}_d$ 上的连续函数集合。对于任何一个连续函数 $f \in C(\mathcal{I}_d)$ 和任意小的正数 $\epsilon > 0$，存在一个整数 $m$（隐藏层神经元个数），以及一组实数 $v_i, b_i \in \mathbb{R}$ 和实数向量 $\mathbf{w}_i \in \mathbb{R}^d \;(i=1,\dots,m)$，使得由单隐藏层前馈网络定义的函数：</p>
+        $$F(\mathbf{x}) = \sum_{i=1}^m v_i \varphi\left(\mathbf{w}_i^T \mathbf{x} + b_i\right)$$
+        <p>满足在全定义域上的一致逼近误差小于 $\epsilon$：</p>
+        $$\left| F(\mathbf{x}) - f(\mathbf{x}) \right| < \epsilon, \quad \forall \mathbf{x} \in \mathcal{I}_d$$
+      </div>
+
+      <div class="ped-box box-example">
+        <div class="ped-label">💡 课件课堂思考题深度解答 (Slide P.31)：双层 ReLU 网络能否模拟有界闭集上的任意连续函数？</div>
+        <p><strong>原题（P.31）</strong>：<em>Thinking: Can a two-layer ReLU network simulate any bounded closed set function?</em>（注意定理 4.1 原始条件要求 $\varphi(\cdot)$ 有界，而 $\text{ReLU}(z) = \max(0,z)$ 是无界的，那双层 ReLU 网络即 $y = \mathbf{w}_2^T \text{ReLU}(\mathbf{W}_1 \mathbf{x} + \mathbf{b}_1) + b_2$ 还成立吗？）</p>
+        <p><strong>严格解答：完全可以！</strong>构造性证明直觉如下：</p>
+        <ol>
+          <li><strong>用两个 ReLU 造出“有界阶梯函数”</strong>：虽然单个 $\text{ReLU}(x)$ 在 $x \to +\infty$ 时无界增长，但如果我们把两个错开一点的 ReLU 相减：$g(x) = \frac{1}{\delta}\left[\text{ReLU}(x - a) - \text{ReLU}(x - (a+\delta))\right]$，当 $x \ge a+\delta$ 时，两个斜率恒为 $1$ 的射线互相抵消，输出恒等于 $1$！这就构造出了一个有界的“斜坡阶跃（Ramp）”函数（见课件 P.8 中间图）。</li>
+          <li><strong>用三个/四个 ReLU 造出“局部帐篷基函数（Hat / Bump Function）”</strong>：令 $B(x) = \text{ReLU}(x - (a-\delta)) - 2\,\text{ReLU}(x - a) + \text{ReLU}(x - (a+\delta))$，它在 $x=a$ 处形成一个高度为 $\delta$ 的局部三角形“小帐篷”，而在 $[a-\delta, a+\delta]$ 区间之外恒等于 $0$！</li>
+          <li><strong>分段线性插值逼近任意连续函数</strong>：在有界闭集（紧集）$\mathcal{I}_d$ 上，任何连续函数都是不一致连续的，我们可以用 $m$ 个不同位置、不同高度的“ReLU 帐篷函数”的线性组合（即分片线性函数 Piecewise Linear Function），以任意精度 $\epsilon$ 逼近任何连续函数 $f(\mathbf{x})$！（Leshno et al., 1993 进一步证明了：只要激活函数<strong>不是多项式函数</strong>，单隐藏层网络均具备通用近似性质）。</li>
+        </ol>
+      </div>
+
+      <h3 id="sec-4-3-loss">4.3.3 参数学习：Softmax 交叉熵损失与 Frobenius 范数结构风险 (P.34 – P.36)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — 多分类输出层、交叉熵与结构化风险函数 (Slide P.34 – P.35)</div>
+        <p>对于 $C$ 类别多分类问题，我们在前馈网络的最后一层（第 $L$ 层）设置 $M_L = C$ 个神经元，净输入为 $\mathbf{z}^{(L)} \in \mathbb{R}^C$，并使用 <strong>Softmax 激活函数</strong>将其转化为归一化的类别条件概率分布 $\hat{\mathbf{y}} \in \mathbb{R}^C$（P.34）：</p>
+        $$\hat{\mathbf{y}} = \text{softmax}\left(\mathbf{z}^{(L)}\right), \quad \text{其中第 } c \text{ 类预测概率为 } \hat{y}_c = \frac{\exp\left(z_c^{(L)}\right)}{\sum_{k=1}^C \exp\left(z_k^{(L)}\right)}$$
+        <p>设样本真实标签的 One-Hot 编码向量为 $\mathbf{y} \in \{0, 1\}^C$（若真实类别为 $c^*$，则 $y_{c^*}=1$，其余分量为 $0$），单个样本 $(\mathbf{x}, \mathbf{y})$ 的<strong>多分类交叉熵损失函数（Cross-Entropy Loss，P.34）</strong>为：</p>
+        $$\mathcal{L}(\mathbf{y}, \hat{\mathbf{y}}) = -\mathbf{y}^T \log \hat{\mathbf{y}} = -\sum_{c=1}^C y_c \log \hat{y}_c = -\log \hat{y}_{c^*}$$
+        <p>给定包含 $N$ 个样本的训练集 $\mathcal{D} = \{(\mathbf{x}^{(n)}, \mathbf{y}^{(n)})\}_{n=1}^N$，整个网络的<strong>结构化风险函数（Structured Risk Function，P.35）</strong>为：</p>
+        $$\mathcal{R}(\mathbf{W}, \mathbf{b}) = \frac{1}{N}\sum_{n=1}^N \mathcal{L}\left(\mathbf{y}^{(n)}, \hat{\mathbf{y}}^{(n)}\right) + \frac{1}{2}\lambda \|\mathbf{W}\|_F^2$$
+        <p>其中 $\|\mathbf{W}\|_F^2$ 是所有层权重矩阵的 <strong>Frobenius 范数平方（Frobenius Norm Squared，即所有标量连接权重的平方和，P.35）</strong>：</p>
+        $$\|\mathbf{W}\|_F^2 = \sum_{l=1}^L \sum_{i=1}^{M_l} \sum_{j=1}^{M_{l-1}} \left(w_{ij}^{(l)}\right)^2$$
+        <p>每一层的梯度下降更新公式为（对 $\frac{1}{2}\lambda\|\mathbf{W}\|_F^2$ 求导得 $\lambda \mathbf{W}^{(l)}$，且偏置 $\mathbf{b}^{(l)}$ 不参与正则化，P.35, P.44）：</p>
+        $$\mathbf{W}^{(l)} \leftarrow \mathbf{W}^{(l)} - \alpha \frac{\partial \mathcal{R}(\mathbf{W}, \mathbf{b})}{\partial \mathbf{W}^{(l)}}, \qquad \mathbf{b}^{(l)} \leftarrow \mathbf{b}^{(l)} - \alpha \frac{\partial \mathcal{R}(\mathbf{W}, \mathbf{b})}{\partial \mathbf{b}^{(l)}}$$
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- CHAPTER 4.4: BACKPROPAGATION ALGORITHM                            -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-4-4">
+      <div class="section-header">
+        <h2>4.4 反向传播算法与矩阵微积分推导 (Backpropagation Algorithm)</h2>
+        <span class="slide-badge">对应课件 P.37 – P.44</span>
+      </div>
+
+      <h3 id="sec-4-4-calc">4.4.1 分母布局矩阵微积分与链式法则 (Denominator Layout &amp; Chain Rule, P.38 – P.39)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — 读懂课件矩阵求导公式的钥匙：分母布局 (Denominator Layout, P.38 – P.39)</div>
+        <p>在向量与矩阵微积分中，为了使结果矩阵的维度与分母（自变量）一致，本课程课件统一采用<strong>分母布局（Denominator Layout，列向量约定，P.38）</strong>：</p>
+        <ol>
+          <li><strong>标量 $y \in \mathbb{R}$ 对列向量 $\mathbf{x} \in \mathbb{R}^p$ 求偏导</strong>（结果仍是 $p$ 维列向量）：
+            $$\frac{\partial y}{\partial \mathbf{x}} = \left[ \frac{\partial y}{\partial x_1}, \; \frac{\partial y}{\partial x_2}, \; \cdots, \; \frac{\partial y}{\partial x_p} \right]^T \in \mathbb{R}^{p \times 1}$$
+          </li>
+          <li><strong>向量函数 $\mathbf{y} = f(\mathbf{x}) \in \mathbb{R}^q$ 对列向量 $\mathbf{x} \in \mathbb{R}^p$ 求偏导</strong>（结果是 $\mathbf{p \times q}$ 矩阵，第 $i$ 行对应分母 $x_i$，第 $j$ 列对应分子 $y_j$）：
+            $$\frac{\partial f(\mathbf{x})}{\partial \mathbf{x}} = \begin{bmatrix} \frac{\partial y_1}{\partial x_1} & \cdots & \frac{\partial y_q}{\partial x_1} \\ \vdots & \ddots & \vdots \\ \frac{\partial y_1}{\partial x_p} & \cdots & \frac{\partial y_q}{\partial x_p} \end{bmatrix} \in \mathbb{R}^{p \times q}$$
+            <em>常用结论（回忆第 2 章 P.19）</em>：若 $\mathbf{z} = \mathbf{W}\mathbf{a} + \mathbf{b}$，其中 $\mathbf{a} \in \mathbb{R}^{M_{l-1}}, \mathbf{z} \in \mathbb{R}^{M_l}, \mathbf{W} \in \mathbb{R}^{M_l \times M_{l-1}}$，则在分母布局下 $\mathbf{\frac{\partial \mathbf{z}}{\partial \mathbf{a}} = \mathbf{W}^T \in \mathbb{R}^{M_{l-1} \times M_l}}$！
+          </li>
+          <li><strong>分母布局下的向量链式法则（Chain Rule，课件 P.39）</strong>：<br>
+            若 $\mathbf{x} \in \mathbb{R}^p \to \mathbf{y} = g(\mathbf{x}) \in \mathbb{R}^s \to \mathbf{z} = f(\mathbf{y}) \in \mathbb{R}^t$，注意由于 $\frac{\partial \mathbf{y}}{\partial \mathbf{x}} \in \mathbb{R}^{p \times s}$ 且 $\frac{\partial \mathbf{z}}{\partial \mathbf{y}} \in \mathbb{R}^{s \times t}$，为了让中间维度 $s$ 相邻匹配，<strong>分母布局下链式法则必须从左往右写（先对中间变量求导，再乘以后层导数）</strong>：
+            $$\frac{\partial \mathbf{z}}{\partial \mathbf{x}} = \underbrace{\frac{\partial \mathbf{y}}{\partial \mathbf{x}}}_{p \times s} \cdot \underbrace{\frac{\partial \mathbf{z}}{\partial \mathbf{y}}}_{s \times t} \in \mathbb{R}^{p \times t}$$
+          </li>
+        </ol>
+      </div>
+
+      <h3 id="sec-4-4-bp">4.4.2 反向传播 (BP) 四大核心方程零跳步推导 (P.40 – P.44)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — 逐行拆解课件 P.40 – P.43 的反向传播推导</div>
+        <p>我们的目标是求单个样本损失 $\mathcal{L}(\mathbf{y}, \hat{\mathbf{y}}) \in \mathbb{R}$ 对第 $l$ 层权重矩阵 $\mathbf{W}^{(l)}$（或单个元素 $w_{ij}^{(l)}$）及偏置向量 $\mathbf{b}^{(l)}$ 的偏导数。</p>
+
+        <p><strong>第一步：引入第 $l$ 层的误差项（Error Term）$\delta^{(l)}$（课件 P.41）</strong></p>
+        <p>定义 $\delta^{(l)}$ 为损失函数 $\mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})$ 对第 $l$ 层神经元<strong>净输入 $\mathbf{z}^{(l)}$</strong> 的偏导数（代表第 $l$ 层各神经元净输入对最终损失的敏感度）：</p>
+        $$\delta^{(l)} \triangleq \frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{z}^{(l)}} \in \mathbb{R}^{M_l \times 1}$$
+
+        <p><strong>第二步：推导误差项从第 $l+1$ 层向第 $l$ 层的反向递推公式（课件 P.42 核心公式）</strong></p>
+        <p>在第 $l$ 层与第 $l+1$ 层之间，数据前向流动关系为：$\mathbf{z}^{(l)} \xrightarrow{f_l(\cdot)} \mathbf{a}^{(l)} \xrightarrow{\mathbf{W}^{(l+1)}\mathbf{a}^{(l)}+\mathbf{b}^{(l+1)}} \mathbf{z}^{(l+1)} \longrightarrow \mathcal{L}$。连续应用两次分母布局链式法则（P.42）：</p>
+        $$\delta^{(l)} \triangleq \frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{z}^{(l)}} = \underbrace{\frac{\partial \mathbf{a}^{(l)}}{\partial \mathbf{z}^{(l)}}}_{\text{第一项 } \in \mathbb{R}^{M_l \times M_l}} \cdot \underbrace{\frac{\partial \mathbf{z}^{(l+1)}}{\partial \mathbf{a}^{(l)}}}_{\text{第二项 } \in \mathbb{R}^{M_l \times M_{l+1}}} \cdot \underbrace{\frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{z}^{(l+1)}}}_{\text{第三项 } \delta^{(l+1)} \in \mathbb{R}^{M_{l+1} \times 1}}$$
+        <p>我们逐一算出这三项：</p>
+        <ul>
+          <li><strong>第一项 $\frac{\partial \mathbf{a}^{(l)}}{\partial \mathbf{z}^{(l)}}$</strong>：因为 $\mathbf{a}^{(l)} = f_l(\mathbf{z}^{(l)})$ 是按元素逐一激活的（即 $a_i^{(l)} = f_l(z_i^{(l)})$，只与 $z_i^{(l)}$ 有关，与其他 $z_k^{(l)}$ 无关），所以它的导数矩阵是一个<strong>对角矩阵（Diagonal Matrix）</strong>：
+            $$\frac{\partial \mathbf{a}^{(l)}}{\partial \mathbf{z}^{(l)}} = \text{diag}\left(f_l'\left(\mathbf{z}^{(l)}\right)\right) = \begin{bmatrix} f_l'(z_1^{(l)}) & 0 & \cdots & 0 \\ 0 & f_l'(z_2^{(l)}) & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & f_l'(z_{M_l}^{(l)}) \end{bmatrix} \in \mathbb{R}^{M_l \times M_l}$$
+          </li>
+          <li><strong>第二项 $\frac{\partial \mathbf{z}^{(l+1)}}{\partial \mathbf{a}^{(l)}}$</strong>：因为 $\mathbf{z}^{(l+1)} = \mathbf{W}^{(l+1)}\mathbf{a}^{(l)} + \mathbf{b}^{(l+1)}$，由分母布局线性求导法则得：
+            $$\frac{\partial \mathbf{z}^{(l+1)}}{\partial \mathbf{a}^{(l)}} = \left(\mathbf{W}^{(l+1)}\right)^T \in \mathbb{R}^{M_l \times M_{l+1}}$$
+          </li>
+          <li><strong>第三项 $\frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{z}^{(l+1)}}$</strong>：按定义正是下一层的误差项 $\delta^{(l+1)} \in \mathbb{R}^{M_{l+1} \times 1}$！</li>
+        </ul>
+        <p>将三项相乘，并利用“对角矩阵 $\text{diag}(\mathbf{u})$ 乘以列向量 $\mathbf{v}$ 等价于两个向量的逐元素哈达玛积（Hadamard Product）$\mathbf{u} \odot \mathbf{v}$”，得到著名的<strong>误差反向传播递推公式（P.42）</strong>：</p>
+        $$\delta^{(l)} = \text{diag}\left(f_l'\left(\mathbf{z}^{(l)}\right)\right) \cdot \left(\mathbf{W}^{(l+1)}\right)^T \cdot \delta^{(l+1)} = \mathbf{f_l'\left(\mathbf{z}^{(l)}\right) \odot \left( \left(\mathbf{W}^{(l+1)}\right)^T \delta^{(l+1)} \right)}$$
+
+        <p><strong>第三步：推导损失对权重 $\mathbf{W}^{(l)}$ 和偏置 $\mathbf{b}^{(l)}$ 的梯度公式（课件 P.40 – P.41, P.43）</strong></p>
+        <ul>
+          <li><strong>对单个权重 $w_{ij}^{(l)}$（连接第 $l-1$ 层第 $j$ 个神经元到第 $l$ 层第 $i$ 个神经元）求导（P.40, P.43）</strong>：<br>
+            在 $\mathbf{z}^{(l)} = \mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}$ 中，只有第 $i$ 个分量 $z_i^{(l)} = \mathbf{w}_{i:}^{(l)}\mathbf{a}^{(l-1)} + b_i^{(l)} = \sum_k w_{ik}^{(l)} a_k^{(l-1)} + b_i^{(l)}$ 含有 $w_{ij}^{(l)}$，且 $\frac{\partial z_i^{(l)}}{\partial w_{ij}^{(l)}} = a_j^{(l-1)}$；其余所有分量 $z_k^{(l)} \;(k \neq i)$ 对 $w_{ij}^{(l)}$ 的偏导全为 $0$！因此（P.40）：
+            $$\frac{\partial \mathbf{z}^{(l)}}{\partial w_{ij}^{(l)}} = \left[ 0, \; \cdots, \; \frac{\partial z_i^{(l)}}{\partial w_{ij}^{(l)}}, \; \cdots, \; 0 \right] = \left[ 0, \; \cdots, \; a_j^{(l-1)}, \; \cdots, \; 0 \right] \triangleq \mathbb{I}_i\left(a_j^{(l-1)}\right) \in \mathbb{R}^{1 \times M_l}$$
+            代入链式法则 $\frac{\partial \mathcal{L}}{\partial w_{ij}^{(l)}} = \frac{\partial \mathbf{z}^{(l)}}{\partial w_{ij}^{(l)}} \frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(l)}}$（P.43）：
+            $$\frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial w_{ij}^{(l)}} = \left[ 0, \; \cdots, \; a_j^{(l-1)}, \; \cdots, \; 0 \right] \begin{bmatrix} \delta_1^{(l)} \\ \vdots \\ \delta_i^{(l)} \\ \vdots \\ \delta_{M_l}^{(l)} \end{bmatrix} = \mathbf{\delta_i^{(l)} a_j^{(l-1)}}$$
+            将所有 $(i, j)$ 元素排成 $M_l \times M_{l-1}$ 矩阵，正好是列向量 $\delta^{(l)}$ 与行向量 $(\mathbf{a}^{(l-1)})^T$ 的<strong>外积（Outer Product，P.43）</strong>：
+            $$\mathbf{\frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{W}^{(l)}} = \delta^{(l)} \left(\mathbf{a}^{(l-1)}\right)^T \in \mathbb{R}^{M_l \times M_{l-1}}}$$
+            <em>直觉记忆</em>：连接权重 $w_{ij}^{(l)}$ 的梯度 = <strong>目标端神经元的误差 $\delta_i^{(l)}$ $\times$ 出发端神经元的激活输入 $a_j^{(l-1)}$</strong>！
+          </li>
+          <li><strong>对偏置向量 $\mathbf{b}^{(l)}$ 求导（P.41, P.43）</strong>：<br>
+            因为 $\frac{\partial \mathbf{z}^{(l)}}{\partial \mathbf{b}^{(l)}} = \mathbf{I}_{M_l}$（单位矩阵），所以：
+            $$\mathbf{\frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{b}^{(l)}} = \frac{\partial \mathbf{z}^{(l)}}{\partial \mathbf{b}^{(l)}} \frac{\partial \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})}{\partial \mathbf{z}^{(l)}} = \mathbf{I}_{M_l} \delta^{(l)} = \delta^{(l)} \in \mathbb{R}^{M_l}}$$
+          </li>
+        </ul>
+
+        <p><strong>第四步：算法 4.1 —— 使用反向传播算法的随机梯度下降训练完整流程（课件 P.44）</strong></p>
+        <ol>
+          <li>随机初始化所有层的 $\mathbf{W}^{(l)}, \mathbf{b}^{(l)}$；</li>
+          <li>在每个 Epoch 中对训练集 $\mathcal{D}$ 随机重排序，对每个样本 $(\mathbf{x}^{(n)}, \mathbf{y}^{(n)})$：
+            <ul>
+              <li><strong>前馈计算（Forward Pass）</strong>：从 $l=1$ 到 $L$ 逐层计算净输入 $\mathbf{z}^{(l)}$ 和激活值 $\mathbf{a}^{(l)}$；</li>
+              <li><strong>反向传播（Backward Pass）</strong>：从 $l=L$ 到 $1$ 逆序计算每一层的误差项 $\delta^{(l)}$；</li>
+              <li><strong>计算梯度并更新参数（Parameter Update，含正则化项 $\lambda \mathbf{W}^{(l)}$）</strong>：
+                $$\mathbf{W}^{(l)} \leftarrow \mathbf{W}^{(l)} - \alpha \left( \delta^{(l)}\left(\mathbf{a}^{(l-1)}\right)^T + \lambda \mathbf{W}^{(l)} \right), \qquad \mathbf{b}^{(l)} \leftarrow \mathbf{b}^{(l)} - \alpha \delta^{(l)}$$
+              </li>
+            </ul>
+          </li>
+          <li>重复迭代直到模型在验证集 $\mathcal{V}$ 上的错误率不再下降（Early Stopping）。</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- CHAPTER 4.5: BP EXAMPLES (CS231N SCALAR, GATES & MATRICES)        -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-4-5">
+      <div class="section-header">
+        <h2>4.5 反向传播实例精讲：从标量计算图到矩阵张量 (BP Examples)</h2>
+        <span class="slide-badge">对应课件 P.45 – P.102</span>
+      </div>
+
+      <h3 id="sec-4-5-scalar">4.5.1 实例 1 &amp; 2：Stanford CS231n 标量计算图逐步手算 (P.46 – P.70)</h3>
+      <div class="ped-box box-intuition">
+        <div class="ped-label">💡 Step 2 &amp; 3: Intuition &amp; How — 计算图反向传播的唯一核心公式 (Slide P.50 – P.52)</div>
+        <p>无论一个计算图有多么庞大复杂，站在图中<strong>任何一个局部计算节点（Gate）</strong>的视角来看，它只需要做一件极其简单的事（课件 P.52）：</p>
+        $$\mathbf{\text{传给输入的下游梯度 (Downstream Gradient)} = \text{从右侧传来的上游梯度 (Upstream Gradient)} \times \text{当前节点的局部梯度 (Local Gradient)}}$$
+        $$\frac{\partial L}{\partial x} = \frac{\partial L}{\partial z} \cdot \frac{\partial z}{\partial x}$$
+      </div>
+
+      <div class="ped-box box-example">
+        <div class="ped-label">✏️ Step 5: Example 1 — 简单标量计算图 $f(x, y, z) = (x + y)z$ (Slide P.46 – P.51)</div>
+        <p><strong>题目（P.46–P.51）</strong>：给定函数 $f(x, y, z) = (x + y)z$，当前输入值为 $x = -2, \; y = 5, \; z = -4$。请引入中间变量 $q = x + y$，画出计算图并求出 $\frac{\partial f}{\partial x}, \frac{\partial f}{\partial y}, \frac{\partial f}{\partial z}$。</p>
+        <ol>
+          <li><strong>前向传播（Forward Pass，图中绿色数字）</strong>：
+            <ul>
+              <li>加法门：$q = x + y = -2 + 5 = \mathbf{3}$；</li>
+              <li>乘法门：$f = q \cdot z = 3 \times (-4) = \mathbf{-12}$。</li>
+            </ul>
+          </li>
+          <li><strong>局部偏导数公式准备</strong>：
+            <ul>
+              <li>对于 $q = x + y$：局部梯度 $\frac{\partial q}{\partial x} = 1, \quad \frac{\partial q}{\partial y} = 1$；</li>
+              <li>对于 $f = qz$：局部梯度 $\frac{\partial f}{\partial q} = z = -4, \quad \frac{\partial f}{\partial z} = q = 3$。</li>
+            </ul>
+          </li>
+          <li><strong>反向传播（Backward Pass，从右向左，图中红色数字）</strong>：
+            <ul>
+              <li><strong>起点（P.47）</strong>：输出端自身对自身的导数为 $\frac{\partial f}{\partial f} = \mathbf{1}$；</li>
+              <li><strong>经过乘法门 $*$（P.48–P.49）</strong>：
+                $$\frac{\partial f}{\partial z} = \underbrace{\frac{\partial f}{\partial f}}_{1} \cdot \underbrace{\frac{\partial f}{\partial z}}_{q=3} = 1 \times 3 = \mathbf{3}, \qquad \frac{\partial f}{\partial q} = \underbrace{\frac{\partial f}{\partial f}}_{1} \cdot \underbrace{\frac{\partial f}{\partial q}}_{z=-4} = 1 \times (-4) = \mathbf{-4}$$
+              </li>
+              <li><strong>经过加法门 $+$（P.50–P.51）</strong>：上游梯度为 $\frac{\partial f}{\partial q} = -4$，乘以加法门的局部梯度 $1$：
+                $$\frac{\partial f}{\partial x} = \frac{\partial f}{\partial q} \cdot \frac{\partial q}{\partial x} = (-4) \times 1 = \mathbf{-4}, \qquad \frac{\partial f}{\partial y} = \frac{\partial f}{\partial q} \cdot \frac{\partial q}{\partial y} = (-4) \times 1 = \mathbf{-4}$$
+              </li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+
+      <div class="ped-box box-example">
+        <div class="ped-label">✏️ Step 5: Example 2 — Sigmoid 神经元计算图的拆解与合并捷径 (Slide P.53 – P.70)</div>
+        <p><strong>题目（P.53）</strong>：计算函数 $f(w, x) = \frac{1}{1 + e^{-(w_0 x_0 + w_1 x_1 + w_2)}}$ 在 $w_0 = 2.0, \; x_0 = -1.0, \; w_1 = -3.0, \; x_1 = -2.0, \; w_2 = -3.0$ 处的前向输出与所有输入的反向梯度。</p>
+        <p><strong>第一阶段：前向传播（从左到右，绿字）</strong>：</p>
+        <ul>
+          <li>$s_0 = w_0 \times x_0 = 2.0 \times (-1.0) = \mathbf{-2.00}$；$s_1 = w_1 \times x_1 = (-3.0) \times (-2.0) = \mathbf{6.00}$；</li>
+          <li>$s_2 = s_0 + s_1 = -2.00 + 6.00 = \mathbf{4.00}$；净输入 $s_3 = s_2 + w_2 = 4.00 + (-3.00) = \mathbf{1.00}$；</li>
+          <li>依次通过初等算子：$h_3 = (-1)\times s_3 = \mathbf{-1.00} \xrightarrow{\exp} h_4 = e^{-1} \approx \mathbf{0.37} \xrightarrow{+1} h_5 = \mathbf{1.37} \xrightarrow{1/x} f = \frac{1}{1.37} \approx \mathbf{0.73}$。</li>
+        </ul>
+        <p><strong>第二阶段：反向传播（两种颗粒度对比，红字）</strong>：</p>
+        <ul>
+          <li><strong>方法 A：逐个初等节点反向求导（P.56 – P.63）</strong>：
+            <ol>
+              <li>起点 $\text{grad\_out} = \mathbf{1.00}$；</li>
+              <li>通过 $1/x$ 门（局部导数 $-1/x^2$，输入 $x=1.37$，P.57）：$\text{grad} = 1.00 \times \left(-\frac{1}{1.37^2}\right) \approx \mathbf{-0.53}$；</li>
+              <li>通过 $+1$ 门（局部导数 $1$，P.59）：$\text{grad} = (-0.53) \times 1 = \mathbf{-0.53}$；</li>
+              <li>通过 $\exp$ 门（局部导数 $e^x$，输入 $x=-1.00$，P.61）：$\text{grad} = (-0.53) \times e^{-1} \approx (-0.53)\times 0.3679 \approx \mathbf{-0.20}$；</li>
+              <li>通过 $*-1$ 门（局部导数 $-1$，P.63）：到达净输入 $s_3$ 的梯度为 $\text{grad\_s3} = (-0.20) \times (-1) = \mathbf{+0.20}$！</li>
+            </ol>
+          </li>
+          <li><strong>方法 B：将后四个节点打包为一个整体 Sigmoid 大门（P.68 – P.70）</strong>：<br>
+            既然 $\sigma(x) = \frac{1}{1+e^{-x}}$ 的导数公式直接就是 $\sigma'(x) = (1 - \sigma(x))\sigma(x)$，而前向输出已经算出了 $\sigma(s_3) = 0.73$，我们可以一步跨过 4 个节点直接算出 $s_3$ 的梯度：
+            $$\text{grad\_s3} = 1.00 \times (1 - 0.73) \times 0.73 = 0.27 \times 0.73 \approx \mathbf{0.20}$$
+            结果分毫不差，而且计算极其简洁！
+          </li>
+          <li><strong>继续向左传给线性层与输入（P.65 – P.67）</strong>：
+            <ul>
+              <li>经过两个 $+$ 门（梯度原样分配）：$dw_2 = \mathbf{0.20}, \; ds_2 = 0.20 \implies ds_0 = \mathbf{0.20}, \; ds_1 = \mathbf{0.20}$；</li>
+              <li>经过上侧 $*$ 门（交换乘以对方的前向值）：$dw_0 = ds_0 \times x_0 = 0.20 \times (-1.00) = \mathbf{-0.20}$，$\; dx_0 = ds_0 \times w_0 = 0.20 \times 2.00 = \mathbf{+0.40}$；</li>
+              <li>经过下侧 $*$ 门：$dw_1 = ds_1 \times x_1 = 0.20 \times (-2.00) = \mathbf{-0.40}$，$\; dx_1 = ds_1 \times w_1 = 0.20 \times (-3.00) = \mathbf{-0.60}$。</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <!-- INTERACTIVE VISUALIZATION 2: CS231N COMPUTATIONAL GRAPH SIMULATOR -->
+      <div class="interactive-panel">
+        <div class="interactive-header">
+          <span class="interactive-title">🎮 交互式实验室 4.2：课件 P.53–70 Sigmoid 神经元计算图前向/反向传播动态模拟器</span>
+          <span style="font-size:0.82rem; color:var(--text-muted);">拖动滑块改变 $w_0, x_0, w_1, x_1, w_2$，实时观察计算图上所有节点的绿色前向值与红色反向梯度</span>
+        </div>
+        <div class="controls-row">
+          <div class="control-group">
+            <label><span>$w_0$</span><span id="cg-w0-val">2.0</span></label>
+            <input type="range" id="cg-w0" min="-4" max="4" step="0.5" value="2.0" oninput="updateCGSim()">
+          </div>
+          <div class="control-group">
+            <label><span>$x_0$</span><span id="cg-x0-val">-1.0</span></label>
+            <input type="range" id="cg-x0" min="-4" max="4" step="0.5" value="-1.0" oninput="updateCGSim()">
+          </div>
+          <div class="control-group">
+            <label><span>$w_1$</span><span id="cg-w1-val">-3.0</span></label>
+            <input type="range" id="cg-w1" min="-4" max="4" step="0.5" value="-3.0" oninput="updateCGSim()">
+          </div>
+          <div class="control-group">
+            <label><span>$x_1$</span><span id="cg-x1-val">-2.0</span></label>
+            <input type="range" id="cg-x1" min="-4" max="4" step="0.5" value="-2.0" oninput="updateCGSim()">
+          </div>
+          <div class="control-group">
+            <label><span>$w_2$ (偏置)</span><span id="cg-w2-val">-3.0</span></label>
+            <input type="range" id="cg-w2" min="-5" max="5" step="0.5" value="-3.0" oninput="updateCGSim()">
+          </div>
+          <button class="btn btn-secondary" onclick="resetCGSim()">重置为课件 P.53 默认值</button>
+        </div>
+        <canvas id="cgCanvas" width="840" height="310"></canvas>
+      </div>
+
+      <h3 id="sec-4-5-gates">4.5.2 梯度流中的四大门模式与 Python 代码实现 (Patterns in Gradient Flow, P.71 – P.78)</h3>
+      <div class="ped-box box-intuition">
+        <div class="ped-label">🔑 Step 2: Intuition — 一眼看穿计算图的四大“门模式” (Slide P.71 必背结论)</div>
+        <ol>
+          <li><strong>加法门（add gate, $z = x + y$）：梯度分配器（Gradient Distributor）</strong><br>
+            因为 $\frac{\partial z}{\partial x} = 1, \frac{\partial z}{\partial y} = 1$，加法门会把上游传来的梯度<strong>原封不动、一式两份地平等广播</strong>给两个输入分支（如课件 P.71：前向 $3+4=7$，上游梯度为 $2$，则上下两个分支拿到的梯度都是 $2$）。</li>
+          <li><strong>乘法门（mul gate, $z = x \times y$）：交换乘法器（"Swap Multiplier"）</strong><br>
+            因为 $\frac{\partial z}{\partial x} = y, \frac{\partial z}{\partial y} = x$，乘法门在反向传播时会<strong>把两个输入的前向数值互换（Swap）</strong>，分别乘以上游梯度！（如课件 P.71：前向 $x=2, y=3 \to z=6$，上游梯度为 $5$，则 $x$ 分支拿到 $5 \times 3 = 15$，$y$ 分支拿到 $5 \times 2 = 10$）。<br>
+            <em>工程启示</em>：如果乘法门的一个输入 $x$ 前向数值特别巨大，那么另一个输入 $y$ 的梯度就会特别巨大！这就是为什么特征未归一化会导致权重梯度剧烈震荡。</li>
+          <li><strong>最大门（max gate, $z = \max(x, y)$）：梯度路由器（Gradient Router）</strong><br>
+            前向传播谁大选谁；反向传播时，<strong>较大的那个胜出分支独吞 $100\%$ 的上游梯度，而较小的落败分支梯度为 $0$</strong>！（如课件 P.71：前向 $\max(2, 4) = 4$，上游梯度为 $9$，则 $4$ 所在分支拿到 $9$，而 $2$ 所在分支拿到 $0$）。ReLU 和最大池化（Max Pooling）本质上就是 max 门。</li>
+          <li><strong>复制门（copy gate，一个变量分叉送往多个下游）：梯度累加器（Gradient Adder）</strong><br>
+            如果前向传播中同一个变量 $x$ 被复制成多条分支送给不同的下游节点（多元微积分全微分法则），那么反向传播时，<strong>各条分支传回来的梯度必须相加求和</strong>！（如课件 P.71：两条分支传回梯度 $4$ 和 $2$，汇合后总梯度为 $4 + 2 = 6$）。</li>
+        </ol>
+      </div>
+
+      <p><strong>课件 P.72 – P.78 的完整 Python 前向与反向传播实现代码：</strong></p>
+<pre><code>def f(w0, x0, w1, x1, w2):
+    # Forward pass: Compute output (前向传播：逐节点计算中间变量与输出)
+    s0 = w0 * x0
+    s1 = w1 * x1
+    s2 = s0 + s1
+    s3 = s2 + w2
+    L = sigmoid(s3)
+
+    # Backward pass: Compute grads (反向传播：严格按逆序运用链式法则)
+    grad_L = 1.0                          # Base case: dL/dL = 1.0 (P.73)
+    grad_s3 = grad_L * (1 - L) * L        # Sigmoid gate: 1.0 * (1 - 0.73) * 0.73 = 0.20 (P.74)
+    grad_w2 = grad_s3                     # Add gate (distributor): 0.20 (P.75)
+    grad_s2 = grad_s3                     # Add gate (distributor): 0.20 (P.75)
+    grad_s0 = grad_s2                     # Add gate (distributor): 0.20 (P.76)
+    grad_s1 = grad_s2                     # Add gate (distributor): 0.20 (P.76)
+    grad_w1 = grad_s1 * x1                # Multiply gate (swap multiplier): 0.20 * (-2.0) = -0.40 (P.77)
+    grad_x1 = grad_s1 * w1                # Multiply gate (swap multiplier): 0.20 * (-3.0) = -0.60 (P.77)
+    grad_w0 = grad_s0 * x0                # Multiply gate (swap multiplier): 0.20 * (-1.0) = -0.20 (P.78)
+    grad_x0 = grad_s0 * w0                # Multiply gate (swap multiplier): 0.20 * 2.0 = 0.40 (P.78)</code></pre>
+
+      <h3 id="sec-4-5-matrix">4.5.3 向量与矩阵/张量的反向传播：维度匹配法则 (Backprop with Vectors &amp; Matrices, P.79 – P.102)</h3>
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 Step 4: Mathematics — 黄金维度法则、稀疏雅可比矩阵与矩阵乘法反向传播 (P.80 – P.102)</div>
+        <p><strong>1. 第一性黄金法则（课件 P.87, P.93）：</strong></p>
+        <p>在神经网络中，无论中间变量 $x$ 是标量、向量、矩阵还是高维张量（Tensor），<strong>最终的损失函数 $L$ 永远是一个标量（Scalar）</strong>！因此，<strong>损失 $L$ 对任意变量 $x$ 的梯度 $\frac{\partial L}{\partial x}$，其形状（Shape / Dimensions）永远与原变量 $x$ 的形状完全一致</strong>（例如 $x \in \mathbb{R}^{D_x \times M_x} \implies \frac{\partial L}{\partial x} \in \mathbb{R}^{D_x \times M_x}$）！</p>
+
+        <p><strong>2. 逐元素运算的稀疏雅可比矩阵（课件 P.89 – P.91 ReLU 向量实例）：</strong></p>
+        <p>设 4 维输入向量 $x = [1, -2, 3, -1]^T$，经过逐元素 ReLU $z = \max(0, x)$ 得到 $z = [1, 0, 3, 0]^T$。设上游传回的梯度为 $\frac{\partial L}{\partial z} = [4, -1, 5, 9]^T$。因为 $z_i$ 只依赖于 $x_i$，其 $4 \times 4$ 雅可比矩阵（Jacobian）$\frac{\partial z}{\partial x} = \text{diag}(1, 0, 1, 0)$ 是高度稀疏的对角阵：</p>
+        $$\frac{\partial L}{\partial x} = \left(\frac{\partial z}{\partial x}\right) \left(\frac{\partial L}{\partial z}\right) = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix} \begin{bmatrix} 4 \\ -1 \\ 5 \\ 9 \end{bmatrix} = \begin{bmatrix} 4 \\ 0 \\ 5 \\ 0 \end{bmatrix}, \quad \text{即 } \left(\frac{\partial L}{\partial x}\right)_i = \begin{cases} \left(\frac{\partial L}{\partial z}\right)_i & \text{if } x_i > 0 \\ 0 & \text{otherwise} \end{cases}$$
+        <p><strong>为什么在实际代码中绝对不能显式构造雅可比矩阵？（课件 P.96）</strong><br>
+        考虑全连接层的批量矩阵乘法 $y = x w$，其中 $x \in \mathbb{R}^{N \times D}$，$w \in \mathbb{R}^{D \times M}$，$y \in \mathbb{R}^{N \times M}$。在典型神经网络中，设批大小 $N = 64$，特征维数 $D = M = 4096$。矩阵 $x$ 和 $y$ 各有 $64 \times 4096 = 262,144$ 个元素，如果显式写出完整的雅可比张量 $\frac{\partial y}{\partial x} \in \mathbb{R}^{(N\times D) \times (N\times M)}$，它包含 $(262,144)^2 \approx 6.87 \times 10^{10}$ 个浮点数，按 4 字节计算需要整整 <strong>256 GB 显存</strong>！因此我们必须利用矩阵乘法直接隐式计算 $\frac{\partial L}{\partial x}$ 和 $\frac{\partial L}{\partial w}$。</p>
+
+        <p><strong>3. 矩阵乘法 $y = x w$ 的反向传播推导与“维度凑配记忆法”（课件 P.96 – P.102 必考！）：</strong></p>
+        <p>已知前向矩阵乘法 $y = x w$，其中 $x \in \mathbb{R}^{N \times D}, \; w \in \mathbb{R}^{D \times M}, \; y \in \mathbb{R}^{N \times M}$，即第 $(n, m)$ 个元素为 $y_{n,m} = \sum_{d=1}^D x_{n,d} w_{d,m}$，且已知上游梯度矩阵 $\frac{\partial L}{\partial y} \in \mathbb{R}^{N \times M}$：</p>
+        <ul>
+          <li><strong>求 $\frac{\partial L}{\partial x_{n,d}}$（课件 P.97 – P.101）</strong>：提问：$x$ 的单个元素 $x_{n,d}$ 影响了 $y$ 的哪些元素？答：影响了 $y$ 的<strong>第 $n$ 整行</strong> $y_{n,\cdot}$！且局部导数为 $\frac{\partial y_{n,m}}{\partial x_{n,d}} = w_{d,m}$。由全微分链式法则对整行求和：
+            $$\frac{\partial L}{\partial x_{n,d}} = \sum_{m=1}^M \frac{\partial L}{\partial y_{n,m}} \frac{\partial y_{n,m}}{\partial x_{n,d}} = \sum_{m=1}^M \left(\frac{\partial L}{\partial y}\right)_{n,m} w_{d,m} = \sum_{m=1}^M \left(\frac{\partial L}{\partial y}\right)_{n,m} \left(w^T\right)_{m,d}$$
+            写成矩阵形式，正是矩阵 $\frac{\partial L}{\partial y}$ 右乘 $w^T$（P.101）：
+            $$\mathbf{\frac{\partial L}{\partial x} = \left(\frac{\partial L}{\partial y}\right) w^T} \quad \left(\text{维度检验：} [N \times D] = [N \times M] \times [M \times D]\right)$$
+          </li>
+          <li><strong>同理求 $\frac{\partial L}{\partial w}$（课件 P.102）</strong>：$w_{d,m}$ 影响 $y$ 的第 $m$ 整列，局部导数为 $x_{n,d}$，故：
+            $$\mathbf{\frac{\partial L}{\partial w} = x^T \left(\frac{\partial L}{\partial y}\right)} \quad \left(\text{维度检验：} [D \times M] = [D \times N] \times [N \times M]\right)$$
+          </li>
+        </ul>
+        <p><strong>💡 Andrew Ng &amp; CS231n 终极秒记口诀（课件 P.102："they are the only way to make shapes match up!"）</strong>：<br>
+        不用死记转置在谁身上！记住乘法门的“交换乘法器”法则：求 $\frac{\partial L}{\partial x}$ 一定是用 $\frac{\partial L}{\partial y}$ 和 $w$ 相乘；由于 $\frac{\partial L}{\partial x}$ 必须是 $[N \times D]$，而 $\frac{\partial L}{\partial y}$ 是 $[N \times M]$、$w$ 是 $[D \times M]$，<strong>唯一能让矩阵乘法维度对齐成 $[N \times D]$ 的写法只能是 $\left(\frac{\partial L}{\partial y}\right) w^T$</strong>！同理，唯一能用 $x$（$[N\times D]$）和 $\frac{\partial L}{\partial y}$（$[N\times M]$）凑出 $[D \times M]$ 的写法只能是 $x^T \left(\frac{\partial L}{\partial y}\right)$！</p>
+      </div>
+
+      <div class="ped-box box-example">
+        <div class="ped-label">✏️ Step 5: Example — 课件 P.96 – P.102 矩阵反向传播完整数值验算</div>
+        <p>给定课件 P.96 中的具体矩阵数值（$N=2, D=3, M=4$）：</p>
+        $$x = \begin{bmatrix} 2 & 1 & -3 \\ -3 & 4 & 2 \end{bmatrix}_{2\times 3}, \quad w = \begin{bmatrix} 3 & 2 & 1 & -1 \\ 2 & 1 & 3 & 2 \\ 3 & 2 & 1 & -2 \end{bmatrix}_{3\times 4}, \quad \frac{\partial L}{\partial y} = \begin{bmatrix} 2 & 3 & -3 & 9 \\ -8 & 1 & 4 & 6 \end{bmatrix}_{2\times 4}$$
+        <p><strong>计算 $\frac{\partial L}{\partial x} = \left(\frac{\partial L}{\partial y}\right) w^T$</strong>：</p>
+        $$\frac{\partial L}{\partial x} = \begin{bmatrix} 2 & 3 & -3 & 9 \\ -8 & 1 & 4 & 6 \end{bmatrix}_{2\times 4} \begin{bmatrix} 3 & 2 & 3 \\ 2 & 1 & 2 \\ 1 & 3 & 1 \\ -1 & 2 & -2 \end{bmatrix}_{4\times 3} = \begin{bmatrix} 6+6-3-9 & 4+3-9+18 & 6+6-3-18 \\ -24+2+4-6 & -16+1+12+12 & -24+2+4-12 \end{bmatrix} = \mathbf{\begin{bmatrix} 0 & 16 & -9 \\ -24 & 9 & -30 \end{bmatrix}_{2\times 3}}$$
+        <p><strong>计算 $\frac{\partial L}{\partial w} = x^T \left(\frac{\partial L}{\partial y}\right)$</strong>：</p>
+        $$\frac{\partial L}{\partial w} = \begin{bmatrix} 2 & -3 \\ 1 & 4 \\ -3 & 2 \end{bmatrix}_{3\times 2} \begin{bmatrix} 2 & 3 & -3 & 9 \\ -8 & 1 & 4 & 6 \end{bmatrix}_{2\times 4} = \mathbf{\begin{bmatrix} 28 & 3 & -18 & 0 \\ -30 & 7 & 13 & 33 \\ -22 & -7 & 17 & -15 \end{bmatrix}_{3\times 4}}$$
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- CHAPTER 4.6 & 4.7: COMPUTATIONAL GRAPH, AD & OPTIMIZATION         -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-4-6">
+      <div class="section-header">
+        <h2>4.6 – 4.7 计算图、自动微分与深度优化难题 (AD &amp; Optimization Problems)</h2>
+        <span class="slide-badge">对应课件 P.103 – P.119</span>
+      </div>
+
+      <h3 id="sec-4-6-ad">4.6.1 自动微分 (Automatic Differentiation)：前向模式 vs. 反向模式 (P.103 – P.108)</h3>
+      <div class="ped-box box-example">
+        <div class="ped-label">✏️ Step 5: Example — 课件 P.104 – P.108 复合函数链 $h_1 \sim h_6$ 自动微分手算</div>
+        <p>考虑一维 Sigmoid 神经元函数 $f(x; w, b) = \frac{1}{\exp(-(wx + b)) + 1}$ 在 $x = 1, \; w = 0, \; b = 0$ 处的求导（课件 P.104–P.105）：</p>
+        <ul>
+          <li><strong>分解为 6 个初等函数节点并计算前向值（红字）与局部导数（黑字）</strong>：
+            <ol>
+              <li>$h_1 = x \times w = 1 \times 0 = \mathbf{0} \implies \frac{\partial h_1}{\partial w} = x = 1, \quad \frac{\partial h_1}{\partial x} = w = 0$</li>
+              <li>$h_2 = h_1 + b = 0 + 0 = \mathbf{0} \implies \frac{\partial h_2}{\partial h_1} = 1, \quad \frac{\partial h_2}{\partial b} = 1$</li>
+              <li>$h_3 = h_2 \times (-1) = \mathbf{0} \implies \frac{\partial h_3}{\partial h_2} = -1$</li>
+              <li>$h_4 = \exp(h_3) = \exp(0) = \mathbf{1} \implies \frac{\partial h_4}{\partial h_3} = \exp(h_3) = 1$</li>
+              <li>$h_5 = h_4 + 1 = 1 + 1 = \mathbf{2} \implies \frac{\partial h_5}{\partial h_4} = 1$</li>
+              <li>$h_6 = 1 / h_5 = \mathbf{0.5} \implies \frac{\partial h_6}{\partial h_5} = -\frac{1}{h_5^2} = -\frac{1}{2^2} = \mathbf{-0.25}$</li>
+            </ol>
+          </li>
+          <li><strong>前向模式（Forward Mode，课件 P.107）</strong>：沿着与计算图前向传播<strong>相同的方向（从输入到输出）</strong>递归计算每个中间节点对某个固定输入 $w$ 的导数 $\frac{\partial h_k}{\partial w}$：
+            $$\frac{\partial h_1}{\partial w} = 1 \to \frac{\partial h_2}{\partial w} = \frac{\partial h_2}{\partial h_1}\frac{\partial h_1}{\partial w} = 1\times 1 = 1 \to \frac{\partial h_3}{\partial w} = -1\times 1 = -1 \to \dots \to \frac{\partial h_6}{\partial w} = -0.25\times(-1) = \mathbf{0.25}$$
+          </li>
+          <li><strong>反向模式（Backward / Reverse Mode，课件 P.108）</strong>：沿着与计算图前向传播<strong>相反的方向（从输出到输入）</strong>递归计算输出 $f$ 对每个中间节点的导数 $\frac{\partial f}{\partial h_k}$：
+            $$\frac{\partial f}{\partial h_6} = 1 \to \frac{\partial f}{\partial h_5} = 1\times(-0.25) = -0.25 \to \frac{\partial f}{\partial h_4} = -0.25\times 1 = -0.25 \to \dots \to \frac{\partial f}{\partial w} = \frac{\partial f}{\partial h_1}\frac{\partial h_1}{\partial w} = 0.25\times 1 = \mathbf{0.25}$$
+          </li>
+        </ul>
+      </div>
+
+      <div class="ped-box box-math">
+        <div class="ped-label">📐 为什么神经网络一定采用“反向模式（BP）”而不是“前向模式”？ (Slide P.106 必考简答)</div>
+        <p>对于一般的向量映射函数 $f: \mathbb{R}^N \to \mathbb{R}^M$（输入有 $N$ 个变量，输出有 $M$ 个变量）：</p>
+        <ul>
+          <li><strong>前向模式（Forward Mode）</strong>：每遍历一遍计算图，只能算出所有输出对<strong>某 1 个输入变量</strong>的导数，因此需要遍历 <strong>$N$ 遍</strong>！</li>
+          <li><strong>反向模式（Reverse Mode）</strong>：每遍历一遍计算图，就能算出<strong>某 1 个输出变量对所有 $N$ 个输入变量</strong>的导数，因此只需要遍历 <strong>$M$ 遍</strong>！</li>
+          <li><strong>核心结论（P.106）</strong>：当 $N > M$ 时，反向模式远比前向模式高效。在前馈神经网络的参数学习中，风险（损失）函数是 $f: \mathbb{R}^N \to \mathbb{R}$（参数数量 $N$ 可达数百万甚至千亿，而输出损失是<strong>标量 $M = 1$</strong>）！因此采用<strong>反向模式（即反向传播算法 BP）只需要遍历 1 遍计算图</strong>就能算出全部 $N$ 个参数的梯度！</li>
+        </ul>
+      </div>
+
+      <h3 id="sec-4-6-pytorch">4.6.2 PyTorch 自动求导实例与静态图 vs. 动态图对比 (P.109 – P.114)</h3>
+      <div class="ped-box box-example">
+        <div class="ped-label">✏️ Step 5: Example — 课件 P.109 PyTorch 多路径计算图 `z.backward()` 解析</div>
+<pre><code>import torch
+a = torch.tensor(2.0, requires_grad=True)
+b = torch.tensor(1.0, requires_grad=True)
+x = 2*a + 3*b
+y = 5*a*a + 3*b*b*b
+z = 2*x + 3*y
+z.backward()
+print("Gradient at a=2.0:", a.grad)</code></pre>
+        <p><strong>手算验证（多路径导数相加，P.106, P.109）</strong>：变量 $a$ 通过两条路径（经由 $x$ 和经由 $y$）影响 $z$（这就是 4.5.2 节讲的 Copy Gate 梯度累加器！）：</p>
+        $$\frac{\partial z}{\partial a} = \frac{\partial z}{\partial x}\frac{\partial x}{\partial a} + \frac{\partial z}{\partial y}\frac{\partial y}{\partial a} = 2 \cdot (2) + 3 \cdot (10a) = 4 + 30a$$
+        <p>代入 $a = 2.0$，得到 `a.grad` $= 4 + 30 \times 2.0 = \mathbf{64.0}$！（同理可得 `b.grad` $= 2(3) + 3(9b^2) = 6 + 27(1)^2 = \mathbf{33.0}$）。</p>
+      </div>
+
+      <p><strong>静态计算图（Static CG）vs. 动态计算图（Dynamic CG，课件 P.111）：</strong></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>维度</th>
+              <th>静态计算图 (Static Computational Graph)</th>
+              <th>动态计算图 (Dynamic Computational Graph)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>构建时机</strong></td>
+              <td>在<strong>编译阶段（Compile time）</strong>预先构建好计算图，程序运行时图结构固定不可变</td>
+              <td>在<strong>程序运行阶段（Run time）</strong>每次前向传播时动态即时构建（Define-by-Run）</td>
+            </tr>
+            <tr>
+              <td><strong>代表框架</strong></td>
+              <td>Theano, TensorFlow 1.x</td>
+              <td>PyTorch, DyNet, Chainer</td>
+            </tr>
+            <tr>
+              <td><strong>优势與劣势</strong></td>
+              <td><strong>优势</strong>：可在编译期对图进行全局优化，并行计算能力极强；<br><strong>劣势</strong>：灵活性差，难以调试和编写依赖输入的动态控制流。</td>
+              <td><strong>优势</strong>：极其灵活直观，原生支持不同输入样本具有不同网络结构（如变长文本/树结构）；<br><strong>劣势</strong>：较难做全局静态图优化，当不同样本图结构不一致时难以批量并行。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="sec-4-7-opt">4.7 深度神经网络的优化难题：非凸性与梯度消失 (Optimization Problems, P.115 – P.119)</h3>
+      <div class="ped-box box-why">
+        <div class="ped-label">❓ Step 1 &amp; 4: Why &amp; Mathematics — 为什么深层神经网络比逻辑回归难训练得多？ (P.116 – P.119)</div>
+        <p>课件 P.116 – P.119 总结了深度神经网络参数优化面临的<strong>四大核心困难（Difficulties）</strong>与<strong>三大算力数据需求（Demands）</strong>：</p>
+        <ol>
+          <li><strong>非凸优化问题（Nonconvex Optimization Problem，课件 P.116）</strong>：<br>
+            哪怕是最简单的双层单神经元网络 $y = \sigma(w_2 \sigma(w_1 x))$，其关于 $(w_1, w_2)$ 的损失曲面（课件 P.116 图 4.9）也不再是凸函数！曲面上存在局部极小值（Local Minima）和大片平坦的高原区（Plateaus）。<br>
+            <em>图 4.9 (a) 平方误差损失 vs. (b) 交叉熵损失对比</em>：在 $(w_1, w_2)$ 处于饱和区时，平方误差损失呈现出一片极其平坦的顶部高原（梯度接近 0，下降极慢），而<strong>交叉熵损失（b）在错误饱和区依然保持陡峭的斜坡</strong>，使梯度下降能迅速逃离错误区域！</li>
+          <li><strong>梯度消失问题（Vanishing Gradient Problem，课件 P.118 核心考点）</strong>：<br>
+            回顾 4.4 节推导的误差反向传播公式与多层复合求导链式法则：
+            $$y = f_5(f_4(f_3(f_2(f_1(x))))) \implies \frac{\partial y}{\partial x} = \frac{\partial f_1}{\partial x}\frac{\partial f_2}{\partial f_1}\frac{\partial f_3}{\partial f_2}\frac{\partial f_4}{\partial f_3}\frac{\partial f_5}{\partial f_4}, \qquad \delta^{(l)} = f_l'\left(\mathbf{z}^{(l)}\right) \odot \left(\left(\mathbf{W}^{(l+1)}\right)^T \delta^{(l+1)}\right)$$
+            观察课件 P.118 的导数曲线图：<strong>Logistic (Sigmoid) 函数的导数最大仅为 $0.25$</strong>（$\sigma'(z) \in (0, 0.25]$），<strong>Tanh 函数的导数最大为 $1$</strong>（一旦偏离原点也很快小于 $1$）。当网络层数 $L$ 很深时，每反向传播经过一层，误差项 $\delta^{(l)}$ 都要乘以一次 $f_l'(\mathbf{z}^{(l)}) \le 0.25$。经过 $k$ 层连乘后，梯度以 $(0.25)^k$ 的指数速度衰减趋近于 $0$！这导致<strong>靠近输出层的高层参数还能正常更新，而靠近输入层的底层参数（Lower parameters）梯度几乎为 0，根本无法有效调整</strong>！<br>
+            <em>解决方法</em>：将隐藏层激活函数替换为正半轴导数恒为 $1$ 的 <strong>ReLU 及其变体</strong>（以及使用残差连接 ResNet、批归一化 BatchNorm、合理权重初始化）。</li>
+          <li><strong>参数量过于庞大（Too many parameters）</strong>：影响训练速度，且容易在小数据集上严重过拟合。</li>
+          <li><strong>参数难以解释（Parameters are difficult to interpret）</strong>：黑盒模型（Black-box model）。</li>
+        </ol>
+      </div>
+
+      <!-- INTERACTIVE VISUALIZATION 3: DEEP NETWORK VANISHING GRADIENT SIMULATOR -->
+      <div class="interactive-panel">
+        <div class="interactive-header">
+          <span class="interactive-title">🎮 交互式实验室 4.3：深层网络梯度消失（Vanishing Gradient）逐层衰减模拟器 (Slide P.118)</span>
+          <span style="font-size:0.82rem; color:var(--text-muted);">切换 Sigmoid / Tanh / ReLU 并调节网络层数 $L$，观察从输出层传回第 1 层的梯度幅值 $\|\delta^{(l)}\|$</span>
+        </div>
+        <div class="controls-row">
+          <div class="control-group">
+            <label><span>隐藏层激活函数类型</span></label>
+            <select id="vg-act" onchange="updateVGSim()">
+              <option value="sigmoid" selected>Sigmoid (导数峰值 ≤ 0.25，严重梯度消失)</option>
+              <option value="tanh">Tanh (导数峰值 ≤ 1.0，中等衰减)</option>
+              <option value="relu">ReLU (正半轴导数 = 1.0，梯度稳定传导)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label><span>网络总层数 $L$</span><span id="vg-layers-val">6 层</span></label>
+            <input type="range" id="vg-layers" min="2" max="10" step="1" value="6" oninput="updateVGSim()">
+          </div>
+          <div class="control-group">
+            <label><span>每层平均净输入偏离度 $|z|$ (越大越饱和)</span><span id="vg-z-val">1.0</span></label>
+            <input type="range" id="vg-z" min="0.0" max="3.0" step="0.2" value="1.0" oninput="updateVGSim()">
+          </div>
+        </div>
+        <canvas id="vgCanvas" width="820" height="260"></canvas>
+        <div class="stat-badges" id="vg-stats"></div>
+      </div>
+
+      <!-- Check Understanding 4.4-4.7 -->
+      <h3>✅ Step 8: Check Understanding（第 4 章随堂自测）</h3>
+      <details>
+        <summary>问题 1：设一个 3 层前馈神经网络的输入维度为 $d = M_0 = 4$，第 1 隐藏层有 $M_1 = 5$ 个神经元，第 2 隐藏层有 $M_2 = 3$ 个神经元，输出层有 $M_3 = 1$ 个神经元（对应课件 P.28–P.29 架构图）。请写出 $\mathbf{W}^{(1)}, \mathbf{b}^{(1)}, \mathbf{W}^{(2)}, \mathbf{b}^{(2)}, \mathbf{W}^{(3)}, \mathbf{b}^{(3)}$ 的精确矩阵维度以及该网络的总参数个数。</summary>
+        <p><strong>解析：</strong>根据公式 $\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}, \; \mathbf{b}^{(l)} \in \mathbb{R}^{M_l \times 1}$：</p>
+        <ul>
+          <li><strong>第 1 层</strong>：$\mathbf{W}^{(1)} \in \mathbb{R}^{5 \times 4}$（20 个权重），$\mathbf{b}^{(1)} \in \mathbb{R}^{5 \times 1}$（5 个偏置）；</li>
+          <li><strong>第 2 层</strong>：$\mathbf{W}^{(2)} \in \mathbb{R}^{3 \times 5}$（15 个权重），$\mathbf{b}^{(2)} \in \mathbb{R}^{3 \times 1}$（3 个偏置）；</li>
+          <li><strong>第 3 层（输出层）</strong>：$\mathbf{W}^{(3)} \in \mathbb{R}^{1 \times 3}$（3 个权重），$\mathbf{b}^{(3)} \in \mathbb{R}^{1 \times 1}$（1 个偏置）；</li>
+          <li><strong>总参数量</strong>：$(20 + 5) + (15 + 3) + (3 + 1) = \mathbf{47}$ 个标量参数。</li>
+        </ul>
+      </details>
+      <details>
+        <summary>问题 2：为什么不能把神经网络的所有权重 $\mathbf{W}^{(l)}$ 全部初始化为 $0$（全零初始化）？</summary>
+        <p><strong>解析（对称权重问题 Symmetry Breaking）</strong>：如果所有权重 $\mathbf{W}^{(l)} = \mathbf{0}$，那么在前向传播时，同一隐藏层内的所有神经元接收到的净输入 $\mathbf{z}^{(l)}$ 完全相同，输出激活值 $\mathbf{a}^{(l)}$ 也完全相同；在反向传播时，由 $\delta^{(l)} = f_l'(\mathbf{z}^{(l)}) \odot ((\mathbf{W}^{(l+1)})^T \delta^{(l+1)})$ 和 $\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}} = \delta^{(l)}(\mathbf{a}^{(l-1)})^T$ 可知，同一层内所有神经元得到的梯度也完全一模一样！这意味着无论训练多少轮，同一层的所有神经元永远在学完全相同的特征，整层 $M_l$ 个神经元彻底退化成了 1 个神经元！因此<strong>必须使用随机初始化（如高斯或均匀分布随机初始化，见算法 4.1 第 1 行）来打破对称性</strong>。</p>
+      </details>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 5: FORMULA CHEAT SHEET                                    -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-cheatsheet">
+      <div class="section-header">
+        <h2>5. 核心公式速查表 (Formula Cheat Sheet)</h2>
+        <span class="slide-badge">第 4 章核心公式一网打尽</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>模块</th>
+              <th>公式名称</th>
+              <th>数学表达式</th>
+              <th>维度与核心备注 (Slide 页码)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="4"><strong>4.1 激活函数</strong></td>
+              <td>人工神经元模型</td>
+              <td>$z = \mathbf{w}^T\mathbf{x} + b, \quad a = f(z)$</td>
+              <td>线性加权 + 非线性激活 (P.6)</td>
+            </tr>
+            <tr>
+              <td>Sigmoid &amp; Tanh 导数</td>
+              <td>$\sigma'(x) = \sigma(x)(1-\sigma(x)) \le 0.25, \quad \tanh'(x) = 1 - \tanh^2(x) \le 1$</td>
+              <td>$\tanh(x) = 2\sigma(2x)-1$ 零中心化 (P.9–12, P.21)</td>
+            </tr>
+            <tr>
+              <td>ReLU / Leaky / ELU</td>
+              <td>$\text{ReLU}(x)=\max(0,x), \quad \text{Leaky}(x)=\max(0.01x,x)$</td>
+              <td>正半轴导数恒为 $1$，解决梯度消失 (P.13–17)</td>
+            </tr>
+            <tr>
+              <td>Swish &amp; GELU</td>
+              <td>$\text{swish}(x) = x\sigma(\beta x), \quad \text{gelu}(x) = x\Phi(x) \approx x\sigma(1.702x)$</td>
+              <td>自门控平滑激活，Transformer 标配 (P.18–19)</td>
+            </tr>
+            <tr>
+              <td rowspan="3"><strong>4.3 前馈网络</strong></td>
+              <td>矩阵前向传播公式</td>
+              <td>$\mathbf{z}^{(l)} = \mathbf{W}^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}, \quad \mathbf{a}^{(l)} = f_l(\mathbf{z}^{(l)})$</td>
+              <td>$\mathbf{W}^{(l)} \in \mathbb{R}^{M_l \times M_{l-1}}, \mathbf{a}^{(l)} \in \mathbb{R}^{M_l}$ (P.29–30)</td>
+            </tr>
+            <tr>
+              <td>通用近似定理</td>
+              <td>$F(\mathbf{x}) = \sum_{i=1}^m v_i \varphi(\mathbf{w}_i^T\mathbf{x}+b_i), \quad |F(\mathbf{x})-f(\mathbf{x})| < \epsilon$</td>
+              <td>单隐藏层即可逼近紧集上任意连续函数 (P.31)</td>
+            </tr>
+            <tr>
+              <td>结构化风险与 Frobenius 范数</td>
+              <td>$\mathcal{R}(\mathbf{W},\mathbf{b}) = \frac{1}{N}\sum_{n=1}^N (-\mathbf{y}^{(n)T}\log\hat{\mathbf{y}}^{(n)}) + \frac{1}{2}\lambda\|\mathbf{W}\|_F^2$</td>
+              <td>$\|\mathbf{W}\|_F^2 = \sum_{l,i,j}(w_{ij}^{(l)})^2$ (P.34–35)</td>
+            </tr>
+            <tr>
+              <td rowspan="4"><strong>4.4–4.5 BP 与矩阵求导</strong></td>
+              <td>误差项定义与反向递推</td>
+              <td>$\delta^{(l)} \triangleq \frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(l)}} = f_l'(\mathbf{z}^{(l)}) \odot \left((\mathbf{W}^{(l+1)})^T \delta^{(l+1)}\right)$</td>
+              <td>$\delta^{(l)} \in \mathbb{R}^{M_l}$，$\odot$ 为逐元素乘法 (P.41–42)</td>
+            </tr>
+            <tr>
+              <td>权重与偏置梯度</td>
+              <td>$\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}} = \delta^{(l)}(\mathbf{a}^{(l-1)})^T, \quad \frac{\partial \mathcal{L}}{\partial \mathbf{b}^{(l)}} = \delta^{(l)}$</td>
+              <td>单个权重 $\frac{\partial \mathcal{L}}{\partial w_{ij}^{(l)}} = \delta_i^{(l)} a_j^{(l-1)}$ (P.43)</td>
+            </tr>
+            <tr>
+              <td>批量矩阵乘法 $y = xw$ 反向传播</td>
+              <td>$\frac{\partial L}{\partial x} = \left(\frac{\partial L}{\partial y}\right) w^T, \quad \frac{\partial L}{\partial w} = x^T \left(\frac{\partial L}{\partial y}\right)$</td>
+              <td>$x:[N\times D], w:[D\times M], y:[N\times M]$ (P.101–102)</td>
+            </tr>
+            <tr>
+              <td>自动微分复杂度对比</td>
+              <td>$f:\mathbb{R}^N \to \mathbb{R}^M$：前向模式需 $N$ 遍，反向模式需 $M$ 遍</td>
+              <td>标量损失 $M=1$ 时反向模式仅需 1 遍 (P.106)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 6: COMMON EXAM TRAPS                                      -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-traps">
+      <div class="section-header">
+        <h2>6. 常见考点与易错点辨析 (Common Exam Traps)</h2>
+        <span class="slide-badge">考前排雷指南</span>
+      </div>
+      <div class="ped-box box-mistake">
+        <div class="ped-label">🚨 第 4 章五大高频考试陷阱</div>
+        <ol>
+          <li><strong>陷阱 1：把 $\delta^{(l)}$ 误记成对激活值 $\mathbf{a}^{(l)}$ 的偏导数</strong><br>
+            请牢记：误差项 $\delta^{(l)} \triangleq \frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(l)}}$ 是损失对<strong>净输入 $\mathbf{z}^{(l)}$（激活前）</strong>的偏导数，而不是对激活后输出 $\mathbf{a}^{(l)}$ 的偏导数！正因如此，$\frac{\partial \mathcal{L}}{\partial \mathbf{b}^{(l)}}$ 才直接等于 $\delta^{(l)}$。</li>
+          <li><strong>陷阱 2：在推导 $\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(l)}}$ 时把外积顺序写反成 $\mathbf{a}^{(l-1)}(\delta^{(l)})^T$</strong><br>
+            用维度法则秒查：$\mathbf{W}^{(l)}$ 的形状是 $M_l \times M_{l-1}$。由于 $\delta^{(l)}$ 是 $M_l \times 1$ 列向量、$\mathbf{a}^{(l-1)}$ 是 $M_{l-1} \times 1$ 列向量，要凑出 $M_l \times M_{l-1}$ 的梯度矩阵，必须是 $\mathbf{\delta^{(l)} (\mathbf{a}^{(l-1)})^T}$！</li>
+          <li><strong>陷阱 3：混淆 Sigmoid 的“饱和梯度消失”与“非零中心化 Zig-Zag”的成因</strong><br>
+            如果考题问 *"Why does non-zero-centered output of Sigmoid slow down convergence?"*，千万不要只答梯度消失！标准答案是：因为输出恒为正（$x_i > 0$），导致下一层神经元对所有权重的梯度 $\frac{\partial L}{\partial w_i} = \delta \cdot x_i$ <strong>永远同正或同负（All positive or all negative）</strong>，迫使权重更新走低效的<strong>之字形路径（Zig-Zag path）</strong>（Slide P.11）。</li>
+          <li><strong>陷阱 4：计算图分叉节点（如 PyTorch 例题中的变量 $a$）反向求导时漏掉某条分支</strong><br>
+            当一个变量同时作为多个算子的输入时（Copy gate），反向传播回该变量的总梯度等于<strong>所有下游分支传回的梯度之和</strong>（Slide P.71, P.106）。</li>
+          <li><strong>陷阱 5：误以为前向模式自动微分（Forward Mode AD）在任何情况下都比反向模式慢</strong><br>
+            只有当输入维度大于输出维度（$N > M$，如神经网络标量损失 $M=1$）时，反向模式（$M$ 遍）才比前向模式（$N$ 遍）快；如果是一个单输入、高维输出的函数 $f: \mathbb{R}^1 \to \mathbb{R}^{1000}$（$N=1, M=1000$），前向模式只需 1 遍，反而比反向模式快 1000 倍（Slide P.106）！</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 7: PRACTICE PROBLEMS                                      -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-practice">
+      <div class="section-header">
+        <h2>7. 分层练习与完整解析 (Practice Problems)</h2>
+        <span class="slide-badge">考场实战演练</span>
+      </div>
+
+      <h3>🌟 基础题（计算图门模式手算）</h3>
+      <details>
+        <summary>练习 1（包含加、乘、Max 与 Copy 门的综合计算图）：设函数 $f(x, y, z) = \max(x, y) + x \cdot z$。当输入为 $x = 3, \; y = 1, \; z = -2$ 时，求前向输出 $f$ 的值，并用反向传播求出 $\frac{\partial f}{\partial x}, \; \frac{\partial f}{\partial y}, \; \frac{\partial f}{\partial z}$。</summary>
+        <p><strong>详细解析：</strong></p>
+        <ol>
+          <li><strong>前向传播</strong>：令 $p = \max(x, y) = \max(3, 1) = \mathbf{3}$；令 $q = x \cdot z = 3 \times (-2) = \mathbf{-6}$；最终输出 $f = p + q = 3 + (-6) = \mathbf{-3}$。</li>
+          <li><strong>反向传播</strong>：
+            <ul>
+              <li>起点 $\frac{\partial f}{\partial f} = 1$；</li>
+              <li>经过输出加法门 $f = p + q$（梯度分配器）：$\frac{\partial f}{\partial p} = \mathbf{1}, \quad \frac{\partial f}{\partial q} = \mathbf{1}$；</li>
+              <li>经过 $p = \max(x, y)$ 最大门（梯度路由器，因为 $x=3 > y=1$，所以 $x$ 胜出）：传给 $x$ 的第一条分支梯度为 $\left(\frac{\partial f}{\partial x}\right)_1 = 1 \times 1 = \mathbf{1}$，传给 $y$ 的梯度为 $\frac{\partial f}{\partial y} = \mathbf{0}$；</li>
+              <li>经过 $q = x \cdot z$ 乘法门（交换乘法器）：传给 $z$ 的梯度为 $\frac{\partial f}{\partial z} = \frac{\partial f}{\partial q} \cdot x = 1 \times 3 = \mathbf{3}$；传给 $x$ 的第二条分支梯度为 $\left(\frac{\partial f}{\partial x}\right)_2 = \frac{\partial f}{\partial q} \cdot z = 1 \times (-2) = \mathbf{-2}$；</li>
+              <li><strong>在输入 $x$ 处汇合（Copy gate 梯度累加器）</strong>：$\frac{\partial f}{\partial x} = \left(\frac{\partial f}{\partial x}\right)_1 + \left(\frac{\partial f}{\partial x}\right)_2 = 1 + (-2) = \mathbf{-1}$。</li>
+            </ul>
+            最终答案：$f = -3, \; \frac{\partial f}{\partial x} = -1, \; \frac{\partial f}{\partial y} = 0, \; \frac{\partial f}{\partial z} = 3$。
+          </li>
+        </ol>
+      </details>
+
+      <h3>🚀 进阶题（Softmax + 交叉熵输出层误差项 $\delta^{(L)}$ 推导）</h3>
+      <details>
+        <summary>练习 2（必考经典结论推导）：在前馈神经网络多分类任务中，最后一层净输入为 $\mathbf{z}^{(L)} \in \mathbb{R}^C$，经 Softmax 激活得到 $\hat{\mathbf{y}} = \text{softmax}(\mathbf{z}^{(L)})$，损失函数为交叉熵 $\mathcal{L}(\mathbf{y}, \hat{\mathbf{y}}) = -\sum_{k=1}^C y_k \log \hat{y}_k$（其中真实标签 $\mathbf{y}$ 为 One-Hot 向量，$\sum_{k=1}^C y_k = 1$）。试证明输出层误差项极其简洁地等于：$\delta^{(L)} = \frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(L)}} = \hat{\mathbf{y}} - \mathbf{y}$。</summary>
+        <p><strong>详细解析（零跳步推导）：</strong></p>
+        <p>由于 $\hat{y}_k = \frac{e^{z_k^{(L)}}}{\sum_{j=1}^C e^{z_j^{(L)}}}$，我们先求 $\log \hat{y}_k = z_k^{(L)} - \log\left(\sum_{j=1}^C e^{z_j^{(L)}}\right)$ 对第 $i$ 个分量 $z_i^{(L)}$ 的偏导数：</p>
+        $$\frac{\partial \log \hat{y}_k}{\partial z_i^{(L)}} = \mathbb{I}(k = i) - \frac{1}{\sum_{j=1}^C e^{z_j^{(L)}}} \cdot e^{z_i^{(L)}} = \mathbb{I}(k = i) - \hat{y}_i$$
+        <p>将其代入交叉熵损失 $\mathcal{L} = -\sum_{k=1}^C y_k \log \hat{y}_k$ 对 $z_i^{(L)}$ 的偏导数中（利用 $\sum_{k=1}^C y_k = 1$）：</p>
+        $$\begin{aligned}
+        \delta_i^{(L)} &= \frac{\partial \mathcal{L}}{\partial z_i^{(L)}} = -\sum_{k=1}^C y_k \frac{\partial \log \hat{y}_k}{\partial z_i^{(L)}} = -\sum_{k=1}^C y_k \left( \mathbb{I}(k = i) - \hat{y}_i \right) \\
+        &= -y_i + \hat{y}_i \underbrace{\left(\sum_{k=1}^C y_k\right)}_{= 1} = \hat{y}_i - y_i
+        \end{aligned}$$
+        <p>写成向量形式即为 $\mathbf{\delta^{(L)} = \hat{\mathbf{y}} - \mathbf{y}}$！这个优美至极的公式表明：Softmax 搭配交叉熵损失时，输出层误差项就是“预测概率向量减去真实 One-Hot 向量”，完全消去了输出层饱和带来的导数衰减！</p>
+      </details>
+
+      <h3>🏆 综合计算题（双层神经网络完整一轮前向 + 反向传播手算）</h3>
+      <details>
+        <summary>练习 3（FNN 完整手算综合题）：设有一个 2 层网络：输入 $\mathbf{x} = [1, 2]^T$，真实标签 $y = 1$。第 1 层（隐藏层，2 个神经元，使用 ReLU 激活）：$\mathbf{W}^{(1)} = \begin{bmatrix} 1 & -1 \\ 0.5 & 1 \end{bmatrix}, \; \mathbf{b}^{(1)} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$。第 2 层（输出层，1 个神经元，线性输出 $\hat{y} = z^{(2)}$，使用平方误差损失 $\mathcal{L} = \frac{1}{2}(\hat{y} - y)^2$）：$\mathbf{W}^{(2)} = \begin{bmatrix} 2 & 1 \end{bmatrix}, \; b^{(2)} = 0$。请完整手算：(1) $\mathbf{z}^{(1)}, \mathbf{a}^{(1)}, z^{(2)}, \mathcal{L}$；(2) $\delta^{(2)}, \delta^{(1)}$；(3) $\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(2)}}, \frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(1)}}$。</summary>
+        <p><strong>详细解析：</strong></p>
+        <ol>
+          <li><strong>前向传播（Forward Pass）</strong>：
+            <ul>
+              <li>第 1 层净输入：$\mathbf{z}^{(1)} = \mathbf{W}^{(1)}\mathbf{x} + \mathbf{b}^{(1)} = \begin{bmatrix} 1 & -1 \\ 0.5 & 1 \end{bmatrix}\begin{bmatrix} 1 \\ 2 \end{bmatrix} = \mathbf{\begin{bmatrix} -1 \\ 2.5 \end{bmatrix}}$；</li>
+              <li>第 1 层 ReLU 激活：$\mathbf{a}^{(1)} = \text{ReLU}(\mathbf{z}^{(1)}) = \begin{bmatrix} \max(0, -1) \\ \max(0, 2.5) \end{bmatrix} = \mathbf{\begin{bmatrix} 0 \\ 2.5 \end{bmatrix}}$（注意第 1 个神经元未激活！）；</li>
+              <li>第 2 层输出：$z^{(2)} = \hat{y} = \mathbf{W}^{(2)}\mathbf{a}^{(1)} + b^{(2)} = \begin{bmatrix} 2 & 1 \end{bmatrix}\begin{bmatrix} 0 \\ 2.5 \end{bmatrix} + 0 = \mathbf{2.5}$；</li>
+              <li>损失值：$\mathcal{L} = \frac{1}{2}(2.5 - 1)^2 = \frac{1}{2}(1.5)^2 = \mathbf{1.125}$。</li>
+            </ul>
+          </li>
+          <li><strong>反向传播计算误差项（Backward Pass）</strong>：
+            <ul>
+              <li>输出层误差项 $\delta^{(2)} = \frac{\partial \mathcal{L}}{\partial z^{(2)}} = \hat{y} - y = 2.5 - 1 = \mathbf{1.5}$；</li>
+              <li>第 1 层 ReLU 导数：$f_1'(\mathbf{z}^{(1)}) = \mathbb{I}(\mathbf{z}^{(1)} > 0) = \begin{bmatrix} 0 \\ 1 \end{bmatrix}$；</li>
+              <li>第 1 层误差项 $\delta^{(1)} = f_1'(\mathbf{z}^{(1)}) \odot \left((\mathbf{W}^{(2)})^T \delta^{(2)}\right) = \begin{bmatrix} 0 \\ 1 \end{bmatrix} \odot \left(\begin{bmatrix} 2 \\ 1 \end{bmatrix} \times 1.5\right) = \begin{bmatrix} 0 \\ 1 \end{bmatrix} \odot \begin{bmatrix} 3.0 \\ 1.5 \end{bmatrix} = \mathbf{\begin{bmatrix} 0 \\ 1.5 \end{bmatrix}}$。</li>
+            </ul>
+          </li>
+          <li><strong>计算权重矩阵梯度</strong>：
+            <ul>
+              <li>$\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(2)}} = \delta^{(2)}\left(\mathbf{a}^{(1)}\right)^T = 1.5 \times \begin{bmatrix} 0 & 2.5 \end{bmatrix} = \mathbf{\begin{bmatrix} 0 & 3.75 \end{bmatrix}}$；</li>
+              <li>$\frac{\partial \mathcal{L}}{\partial \mathbf{W}^{(1)}} = \delta^{(1)}\left(\mathbf{x}\right)^T = \begin{bmatrix} 0 \\ 1.5 \end{bmatrix} \begin{bmatrix} 1 & 2 \end{bmatrix} = \mathbf{\begin{bmatrix} 0 & 0 \\ 1.5 & 3.0 \end{bmatrix}}$（因为第 1 个隐藏神经元 $z_1^{(1)} = -1 < 0$ 被 ReLU 截断，所以其一整行权重梯度全为 $0$！）。</li>
+            </ul>
+          </li>
+        </ol>
+      </details>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 8: LECTURE COVERAGE CHECKLIST                             -->
+    <!-- ================================================================= -->
+    <section class="section-card" id="sec-checklist">
+      <div class="section-header">
+        <h2>8. 原课件 119 页全覆盖核对表 (Lecture Coverage Checklist)</h2>
+        <span class="slide-badge">4-Neural Networks.pptx P.1 – P.119 逐页核验</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>原课件页码范围</th>
+              <th>原课件核心知识点与公式/例题</th>
+              <th>本教材对应章节</th>
+              <th>覆盖状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>P.1 – P.7</strong></td>
+              <td>课程提纲、生物神经元结构（树突/轴突/突触）、人工神经元模型 $z=\mathbf{w}^T\mathbf{x}+b, a=f(z)$、激活函数的四大性质</td>
+              <td>第 0 节, 4.1.1 &amp; 4.1.2 节</td>
+              <td>✅ 100% 完整讲解</td>
+            </tr>
+            <tr>
+              <td><strong>P.8 – P.12</strong></td>
+              <td>三类激活函数概览、Sigmoid 函数与两大缺陷（P.10 饱和杀死梯度 $x=-10,0,10$；P.11 非零中心化导致梯度同号与 Zig-Zag 路径）、Tanh 函数</td>
+              <td>4.1.3 节</td>
+              <td>✅ 100% 完整讲解 + 数学证明</td>
+            </tr>
+            <tr>
+              <td><strong>P.13 – P.21</strong></td>
+              <td>ReLU 优缺点与 Dead ReLU 数据云分析、Leaky ReLU、ELU、Swish 自门控函数、GELU（期望解释与近似公式）、工程选型建议、P.21 激活函数与导数汇总表（含 SoftPlus）</td>
+              <td>4.1.4 节 &amp; 4.1.5 节</td>
+              <td>✅ 100% 完整讲解 + 互动实验</td>
+            </tr>
+            <tr>
+              <td><strong>P.22 – P.26</strong></td>
+              <td>ANN 三要素、三种拓扑结构（前馈网络、记忆网络、图网络 GNN/GCN/GAT/GraphSAGE）、PDP 连接主义三大特征</td>
+              <td>4.2.1 节</td>
+              <td>✅ 100% 完整讲解</td>
+            </tr>
+            <tr>
+              <td><strong>P.27 – P.36</strong></td>
+              <td>FNN 结构与 P.29 记号表（$L, M_l, f_l, \mathbf{W}^{(l)}, \mathbf{b}^{(l)}, \mathbf{z}^{(l)}, \mathbf{a}^{(l)}$）、前向传播公式、通用近似定理（定理 4.1）与双层 ReLU 思考题、深层层次特征可视化、Softmax 交叉熵与 Frobenius 范数结构风险</td>
+              <td>4.3.1, 4.3.2 &amp; 4.3.3 节</td>
+              <td>✅ 100% 完整讲解 + 思考题证明</td>
+            </tr>
+            <tr>
+              <td><strong>P.37 – P.44</strong></td>
+              <td>复合函数链式求导、分母布局矩阵微积分（P.38–39）、误差项 $\delta^{(l)}$ 定义与反向递推公式 $\delta^{(l)}=f_l'(\mathbf{z}^{(l)})\odot((\mathbf{W}^{(l+1)})^T\delta^{(l+1)})$、参数梯度 $\delta^{(l)}(\mathbf{a}^{(l-1)})^T$、算法 4.1 SGD+BP 伪代码</td>
+              <td>4.4.1 节 &amp; 4.4.2 节</td>
+              <td>✅ 100% 完整讲解 + 零跳步推导</td>
+            </tr>
+            <tr>
+              <td><strong>P.45 – P.78</strong></td>
+              <td>CS231n 实例 1：$f(x,y,z)=(x+y)z$ 逐步手算；实例 2：Sigmoid 神经元 $f(w,x)$ 逐节点求导与合并 Sigmoid 门捷径；P.71 四大门模式（add/mul/max/copy gate）；P.72–78 Python 代码实现</td>
+              <td>4.5.1 节 &amp; 4.5.2 节</td>
+              <td>✅ 100% 完整讲解 + 动态模拟器</td>
+            </tr>
+            <tr>
+              <td><strong>P.79 – P.102</strong></td>
+              <td>标量/向量/雅可比导数维度回顾、4D ReLU 稀疏雅可比矩阵实例、256GB 显存分析、矩阵乘法 $y=xw$ 反向传播推导 $(dL/dy)w^T$ 与 $x^T(dL/dy)$ 及 $2\times 3, 3\times 4$ 矩阵实例</td>
+              <td>4.5.3 节</td>
+              <td>✅ 100% 完整讲解 + 矩阵全验算</td>
+            </tr>
+            <tr>
+              <td><strong>P.103 – P.114</strong></td>
+              <td>计算图 $h_1\sim h_6$ 在 $x=1,w=0,b=0$ 处的自动微分（$\partial f/\partial w = 0.25$）、前向模式（$N$ 遍）vs 反向模式（$M$ 遍）、PyTorch `z.backward()` 实例、静态图 vs 动态图、Keras 30秒上手代码</td>
+              <td>4.6.1 节 &amp; 4.6.2 节</td>
+              <td>✅ 100% 完整讲解</td>
+            </tr>
+            <tr>
+              <td><strong>P.115 – P.119</strong></td>
+              <td>非凸优化损失曲面对比 $y=\sigma(w_2\sigma(w_1 x))$（平方误差 vs 交叉熵）、梯度消失问题（Sigmoid 导数 $\le 0.25$ 与 Tanh 导数曲线）、深度学习优化的四大困难与三大需求</td>
+              <td>4.7 节</td>
+              <td>✅ 100% 完整讲解 + 梯度消失模拟器</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <a href="chapter3-supervised-learning.html" class="btn btn-secondary">⬅️ 上一章：第 3 章 监督学习精讲 (P.1–124)</a>
+        <a href="index.html" class="btn">🏠 返回课程总览与导航中心 (index.html)</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const scrollTop = doc.scrollTop || document.body.scrollTop;
+  const scrollHeight = doc.scrollHeight - doc.clientHeight;
+  const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  document.getElementById('progress-bar').style.width = progress + '%';
+});
+
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  updateActSim();
+  updateCGSim();
+  updateVGSim();
+}
+
+function getThemeColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    bg: isDark ? '#1e293b' : '#ffffff',
+    grid: isDark ? '#334155' : '#cbd5e1',
+    text: isDark ? '#f8fafc' : '#090d16',
+    muted: isDark ? '#94a3b8' : '#475569',
+    accent: isDark ? '#818cf8' : '#4338ca'
+  };
+}
+
+// =========================================================================
+// INTERACTIVE 1: 8 ACTIVATION FUNCTIONS & DERIVATIVES EXPLORER
+// =========================================================================
+function evalAct(type, x) {
+  const sig = z => 1 / (1 + Math.exp(-z));
+  if (type === 'sigmoid') {
+    const f = sig(x);
+    return { f, df: f * (1 - f), note: Math.abs(x) > 4 ? '⚠️ 处于饱和区，导数趋近 0（杀死梯度！）' : '正常激活区（注意输出非零中心化）' };
+  } else if (type === 'tanh') {
+    const f = Math.tanh(x);
+    return { f, df: 1 - f * f, note: Math.abs(x) > 3.5 ? '⚠️ 处于两端饱和区，导数趋近 0' : '✅ 零中心化激活区，导数峰值可达 1.0' };
+  } else if (type === 'relu') {
+    const f = Math.max(0, x);
+    return { f, df: x > 0 ? 1 : 0, note: x > 0 ? '✅ 正半轴恒定导数 1.0，梯度无损传导' : '💀 负半轴输出为 0、导数为 0（若对所有样本皆负则 Dead ReLU）' };
+  } else if (type === 'leaky') {
+    const f = x > 0 ? x : 0.1 * x;
+    return { f, df: x > 0 ? 1 : 0.1, note: x > 0 ? '✅ 正半轴导数 1.0' : '✅ 负半轴保留非零斜率，神经元永不坏死' };
+  } else if (type === 'elu') {
+    const f = x > 0 ? x : (Math.exp(x) - 1);
+    const df = x > 0 ? 1 : Math.exp(x);
+    return { f, df, note: '负半轴软饱和使得输出均值更接近 0，增强抗噪性' };
+  } else if (type === 'swish') {
+    const s = sig(x);
+    const f = x * s;
+    const df = s + x * s * (1 - s);
+    return { f, df, note: '自门控平滑非单调函数 x·σ(x)' };
+  } else if (type === 'gelu') {
+    const s = sig(1.702 * x);
+    const f = x * s;
+    const df = s + 1.702 * x * s * (1 - s);
+    return { f, df, note: 'Transformer (BERT/GPT/ViT) 标配激活函数' };
+  } else {
+    // softplus
+    const f = Math.log(1 + Math.exp(x));
+    const df = sig(x);
+    return { f, df, note: 'ReLU 的光滑可导近似，其导数恰为 Sigmoid 函数！' };
+  }
+}
+
+function updateActSim() {
+  const type = document.getElementById('act-type').value;
+  const xVal = parseFloat(document.getElementById('act-x').value);
+  document.getElementById('act-x-val').textContent = 'x = ' + xVal.toFixed(1);
+
+  const canvas = document.getElementById('actCanvas');
+  const ctx = canvas.getContext('2d');
+  const c = getThemeColors();
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 50, padR = 30, padT = 20, padB = 35;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xMin = -6, xMax = 6, yMin = -1.5, yMax = 4.5;
+
+  const toX = x => padL + ((x - xMin) / (xMax - xMin)) * plotW;
+  const toY = y => padT + ((yMax - y) / (yMax - yMin)) * plotH;
+
+  // Grid
+  ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
+  for (let y = -1; y <= 4; y += 1) {
+    const py = toY(y);
+    ctx.beginPath(); ctx.moveTo(padL, py); ctx.lineTo(W - padR, py); ctx.stroke();
+    ctx.fillStyle = c.muted; ctx.font = '12px sans-serif';
+    ctx.fillText(y.toFixed(1), 16, py + 4);
+  }
+  for (let x = -6; x <= 6; x += 2) {
+    const px = toX(x);
+    ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, H - padB); ctx.stroke();
+    ctx.fillStyle = c.muted;
+    ctx.fillText(x.toString(), px - 6, H - 12);
+  }
+
+  // Axes x=0, y=0
+  ctx.strokeStyle = c.muted; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padL, toY(0)); ctx.lineTo(W - padR, toY(0));
+  ctx.moveTo(toX(0), padT); ctx.lineTo(toX(0), H - padB);
+  ctx.stroke();
+
+  // Draw f(x) (solid blue/indigo) and f'(x) (dashed emerald)
+  ctx.strokeStyle = c.accent; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let i = 0; i <= 300; i++) {
+    const x = xMin + (i / 300) * (xMax - xMin);
+    const { f } = evalAct(type, x);
+    const px = toX(x), py = toY(Math.min(Math.max(f, yMin), yMax));
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = '#059669'; ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  for (let i = 0; i <= 300; i++) {
+    const x = xMin + (i / 300) * (xMax - xMin);
+    const { df } = evalAct(type, x);
+    const px = toX(x), py = toY(Math.min(Math.max(df, yMin), yMax));
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Legend
+  ctx.fillStyle = c.accent; ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('━━ 激活函数值 f(x)', padL + 16, padT + 20);
+  ctx.fillStyle = '#059669';
+  ctx.fillText('╌╌ 局部导数 f\'(x)', padL + 165, padT + 20);
+
+  // Current point
+  const cur = evalAct(type, xVal);
+  ctx.fillStyle = c.accent;
+  ctx.beginPath(); ctx.arc(toX(xVal), toY(Math.min(Math.max(cur.f, yMin), yMax)), 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#059669';
+  ctx.beginPath(); ctx.arc(toX(xVal), toY(Math.min(Math.max(cur.df, yMin), yMax)), 6, 0, Math.PI * 2); ctx.fill();
+
+  document.getElementById('act-stats').innerHTML = `
+    <div class="stat-badge">当前输入: <strong>x = ${xVal.toFixed(2)}</strong></div>
+    <div class="stat-badge">前向激活输出 $f(x)$: <strong style="color:var(--accent-primary)">${cur.f.toFixed(4)}</strong></div>
+    <div class="stat-badge">反向局部导数 $f'(x)$: <strong style="color:#059669">${cur.df.toFixed(4)}</strong></div>
+    <div class="stat-badge">诊断分析: <strong>${cur.note}</strong></div>
+  `;
+}
+
+// =========================================================================
+// INTERACTIVE 2: CS231N COMPUTATIONAL GRAPH SIMULATOR (SLIDES P.53-70)
+// =========================================================================
+function resetCGSim() {
+  document.getElementById('cg-w0').value = 2.0;
+  document.getElementById('cg-x0').value = -1.0;
+  document.getElementById('cg-w1').value = -3.0;
+  document.getElementById('cg-x1').value = -2.0;
+  document.getElementById('cg-w2').value = -3.0;
+  updateCGSim();
+}
+
+function updateCGSim() {
+  const w0 = parseFloat(document.getElementById('cg-w0').value);
+  const x0 = parseFloat(document.getElementById('cg-x0').value);
+  const w1 = parseFloat(document.getElementById('cg-w1').value);
+  const x1 = parseFloat(document.getElementById('cg-x1').value);
+  const w2 = parseFloat(document.getElementById('cg-w2').value);
+
+  document.getElementById('cg-w0-val').textContent = w0.toFixed(1);
+  document.getElementById('cg-x0-val').textContent = x0.toFixed(1);
+  document.getElementById('cg-w1-val').textContent = w1.toFixed(1);
+  document.getElementById('cg-x1-val').textContent = x1.toFixed(1);
+  document.getElementById('cg-w2-val').textContent = w2.toFixed(1);
+
+  // Forward pass
+  const s0 = w0 * x0;
+  const s1 = w1 * x1;
+  const s2 = s0 + s1;
+  const s3 = s2 + w2;
+  const h3 = -s3;
+  const h4 = Math.exp(h3);
+  const h5 = h4 + 1;
+  const out = 1 / h5;
+
+  // Backward pass
+  const d_out = 1.0;
+  const d_h5 = d_out * (-1 / (h5 * h5));
+  const d_h4 = d_h5 * 1.0;
+  const d_h3 = d_h4 * Math.exp(h3);
+  const d_s3 = d_h3 * (-1.0);
+  const d_w2 = d_s3;
+  const d_s2 = d_s3;
+  const d_s0 = d_s2;
+  const d_s1 = d_s2;
+  const d_w0 = d_s0 * x0;
+  const d_x0 = d_s0 * w0;
+  const d_w1 = d_s1 * x1;
+  const d_x1 = d_s1 * w1;
+
+  const canvas = document.getElementById('cgCanvas');
+  const ctx = canvas.getContext('2d');
+  const c = getThemeColors();
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  function drawWire(xA, yA, xB, yB, fVal, bVal, label) {
+    ctx.strokeStyle = c.muted; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xA, yA); ctx.lineTo(xB, yB); ctx.stroke();
+    const mx = (xA + xB) / 2, my = (yA + yB) / 2;
+    if (label) {
+      ctx.fillStyle = c.text; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(label, xA - 28, yA + 4);
+    }
+    ctx.fillStyle = '#15803d'; ctx.font = 'bold 12px monospace';
+    ctx.fillText(fVal.toFixed(2), mx - 18, my - 7);
+    ctx.fillStyle = '#b91c1c'; ctx.font = 'bold 12px monospace';
+    ctx.fillText(bVal.toFixed(2), mx - 18, my + 16);
+  }
+
+  function drawGate(gx, gy, text) {
+    ctx.fillStyle = c.bg;
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(gx, gy, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = c.text; ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, gx, gy + 5);
+    ctx.textAlign = 'left';
+  }
+
+  // Wires & Gates layout matching CS231n Slide P.66
+  drawWire(42, 45, 130, 75, w0, d_w0, 'w0');
+  drawWire(42, 105, 130, 75, x0, d_x0, 'x0');
+  drawWire(42, 165, 130, 195, w1, d_w1, 'w1');
+  drawWire(42, 225, 130, 195, x1, d_x1, 'x1');
+  drawWire(42, 275, 350, 195, w2, d_w2, 'w2');
+
+  drawWire(150, 75, 245, 135, s0, d_s0, '');
+  drawWire(150, 195, 245, 135, s1, d_s1, '');
+  drawWire(265, 135, 350, 195, s2, d_s2, '');
+
+  drawWire(370, 195, 455, 195, s3, d_s3, '');
+  drawWire(475, 195, 560, 195, h3, d_h3, '');
+  drawWire(580, 195, 665, 195, h4, d_h4, '');
+  drawWire(685, 195, 755, 195, h5, d_h5, '');
+  drawWire(775, 195, 830, 195, out, d_out, '');
+
+  drawGate(140, 75, '*');
+  drawGate(140, 195, '*');
+  drawGate(255, 135, '+');
+  drawGate(360, 195, '+');
+  drawGate(465, 195, '*-1');
+  drawGate(570, 195, 'exp');
+  drawGate(675, 195, '+1');
+  drawGate(765, 195, '1/x');
+
+  // Highlight Sigmoid box
+  ctx.strokeStyle = 'rgba(67, 56, 202, 0.5)';
+  ctx.setLineDash([5, 4]);
+  ctx.strokeRect(430, 145, 365, 95);
+  ctx.setLineDash([]);
+  ctx.fillStyle = c.accent; ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('Sigmoid 整体门 σ(s₃): 局部导数 = (1 - σ)·σ = ' + ((1 - out) * out).toFixed(3), 438, 136);
+  ctx.fillStyle = '#15803d'; ctx.fillText('■ 绿色数字 = 前向传播值 (Forward)', 438, 45);
+  ctx.fillStyle = '#b91c1c'; ctx.fillText('■ 红色数字 = 反向传播梯度 (Backward)', 438, 68);
+}
+
+// =========================================================================
+// INTERACTIVE 3: VANISHING GRADIENT SIMULATOR (SLIDE P.118)
+// =========================================================================
+function updateVGSim() {
+  const act = document.getElementById('vg-act').value;
+  const L = parseInt(document.getElementById('vg-layers').value, 10);
+  const zAbs = parseFloat(document.getElementById('vg-z').value);
+
+  document.getElementById('vg-layers-val').textContent = L + ' 层';
+  document.getElementById('vg-z-val').textContent = zAbs.toFixed(1);
+
+  let localDeriv = 1.0;
+  if (act === 'sigmoid') {
+    const s = 1 / (1 + Math.exp(-zAbs));
+    localDeriv = s * (1 - s);
+  } else if (act === 'tanh') {
+    const t = Math.tanh(zAbs);
+    localDeriv = 1 - t * t;
+  } else {
+    localDeriv = 1.0; // ReLU in active region
+  }
+
+  // Compute gradient norm from layer L down to layer 1
+  const grads = [];
+  let g = 1.0;
+  for (let l = L; l >= 1; l--) {
+    grads.unshift({ layer: l, val: g });
+    g = g * localDeriv;
+  }
+
+  const canvas = document.getElementById('vgCanvas');
+  const ctx = canvas.getContext('2d');
+  const c = getThemeColors();
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 65, padR = 35, padT = 35, padB = 45;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const barW = Math.min(55, (plotW / L) * 0.6);
+
+  ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+
+  grads.forEach((item, idx) => {
+    const cx = padL + ((idx + 0.5) / L) * plotW;
+    const barH = Math.max(3, item.val * plotH);
+    const by = H - padB - barH;
+
+    ctx.fillStyle = item.val < 0.01 ? '#dc2626' : (item.val < 0.15 ? '#d97706' : '#059669');
+    ctx.fillRect(cx - barW / 2, by, barW, barH);
+
+    ctx.fillStyle = c.text; ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    const labelStr = item.val < 0.0001 ? item.val.toExponential(1) : item.val.toFixed(4);
+    ctx.fillText(labelStr, cx, by - 8);
+
+    ctx.fillStyle = c.muted; ctx.font = '12px sans-serif';
+    ctx.fillText('第 ' + item.layer + ' 层', cx, H - 18);
+  });
+  ctx.textAlign = 'left';
+
+  const firstLayerGrad = grads[0].val;
+  document.getElementById('vg-stats').innerHTML = `
+    <div class="stat-badge">单层局部导数 $f'(z)$: <strong>${localDeriv.toFixed(4)}</strong></div>
+    <div class="stat-badge">输出层 (第 ${L} 层) 初始误差 $\\|\\delta^{(${L})}\\|$: <strong>1.0000</strong></div>
+    <div class="stat-badge">传回第 1 层 (底层) 的误差 $\\|\\delta^{(1)}\\|$: <strong style="color:${firstLayerGrad<0.01?'#dc2626':'#059669'}">${firstLayerGrad < 0.0001 ? firstLayerGrad.toExponential(2) : firstLayerGrad.toFixed(5)}</strong></div>
+    <div class="stat-badge">结论: <strong>${firstLayerGrad < 0.005 ? '⚠️ 严重梯度消失！第 1 层权重几乎无法更新' : '✅ 底层梯度充足，参数可正常学习'}</strong></div>
+  `;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateActSim();
+  updateCGSim();
+  updateVGSim();
+});
+</script>
+</body>
+</html>
